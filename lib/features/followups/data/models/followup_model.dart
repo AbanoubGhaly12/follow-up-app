@@ -6,6 +6,8 @@ class FollowupModel extends Equatable {
   final String id;
   final String familyId;
   final String? familyName;
+  final String? memberId;
+  final String? memberName;
   final DateTime followupDate;
   final String notes;
   final FollowupType type;
@@ -16,6 +18,8 @@ class FollowupModel extends Equatable {
     required this.id,
     required this.familyId,
     this.familyName,
+    this.memberId,
+    this.memberName,
     required this.followupDate,
     required this.notes,
     required this.type,
@@ -28,6 +32,8 @@ class FollowupModel extends Equatable {
     id,
     familyId,
     familyName,
+    memberId,
+    memberName,
     followupDate,
     notes,
     type,
@@ -40,6 +46,8 @@ class FollowupModel extends Equatable {
       id: map['id'] as String,
       familyId: map['family_id'] as String,
       familyName: map['family_name'] as String?,
+      memberId: map['member_id'] as String?,
+      memberName: map['member_name'] as String?,
       followupDate: DateTime.parse(map['followup_date'] as String),
       notes: map['notes'] as String,
       type: FollowupType.values.firstWhere(
@@ -56,6 +64,8 @@ class FollowupModel extends Equatable {
       'id': id,
       'family_id': familyId,
       'family_name': familyName,
+      'member_id': memberId,
+      'member_name': memberName,
       'followup_date': followupDate.toIso8601String(),
       'notes': notes,
       'type': type.toString().split('.').last,
@@ -68,6 +78,8 @@ class FollowupModel extends Equatable {
     String? id,
     String? familyId,
     String? familyName,
+    String? memberId,
+    String? memberName,
     DateTime? followupDate,
     String? notes,
     FollowupType? type,
@@ -78,6 +90,8 @@ class FollowupModel extends Equatable {
       id: id ?? this.id,
       familyId: familyId ?? this.familyId,
       familyName: familyName ?? this.familyName,
+      memberId: memberId ?? this.memberId,
+      memberName: memberName ?? this.memberName,
       followupDate: followupDate ?? this.followupDate,
       notes: notes ?? this.notes,
       type: type ?? this.type,

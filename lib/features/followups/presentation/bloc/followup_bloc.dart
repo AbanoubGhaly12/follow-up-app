@@ -53,6 +53,10 @@ class FollowupBloc extends Bloc<FollowupEvent, FollowupState> {
       final followups = await repository.getFollowupsReport(
         date: event.date,
         type: event.type,
+        zoneId: event.zoneId,
+        streetId: event.streetId,
+        inactivityMonths: event.inactivityMonths,
+        isFamilyReport: event.isFamilyReport,
       );
       emit(FollowupLoaded(followups));
     } catch (e) {

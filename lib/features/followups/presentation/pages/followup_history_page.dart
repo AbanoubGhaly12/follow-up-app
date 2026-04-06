@@ -11,8 +11,13 @@ import '../../data/models/followup_model.dart';
 
 class FollowupHistoryPage extends StatefulWidget {
   final String familyId;
+  final String? familyName;
 
-  const FollowupHistoryPage({super.key, required this.familyId});
+  const FollowupHistoryPage({
+    super.key,
+    required this.familyId,
+    this.familyName,
+  });
 
   @override
   State<FollowupHistoryPage> createState() => _FollowupHistoryPageState();
@@ -76,7 +81,13 @@ class _FollowupHistoryPageState extends State<FollowupHistoryPage> {
     final dateFormat = DateFormat('dd MMM yyyy');
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.followups)),
+      appBar: AppBar(
+        title: Text(
+          widget.familyName != null
+              ? "${l10n.followups} - ${widget.familyName}"
+              : l10n.followups,
+        ),
+      ),
       body: BlocBuilder<FollowupBloc, FollowupState>(
         builder: (context, state) {
           if (state is FollowupLoading) {
@@ -128,6 +139,27 @@ class _FollowupHistoryPageState extends State<FollowupHistoryPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            if (followup.memberName != null) ...[
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.person,
+                                    size: 14,
+                                    color: Colors.blue,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    followup.memberName!,
+                                    style: const TextStyle(
+                                      color: Colors.blue,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                            ],
                             Text(
                               dateFormat.format(followup.followupDate),
                               style: TextStyle(
@@ -158,6 +190,11 @@ class _FollowupHistoryPageState extends State<FollowupHistoryPage> {
                                 title: typeLabel,
                                 items: [
                                   DetailItem(l10n.followupType, typeLabel),
+                                  if (followup.memberName != null)
+                                    DetailItem(
+                                      l10n.members,
+                                      followup.memberName!,
+                                    ),
                                   DetailItem(
                                     l10n.followupDate,
                                     dateFormat.format(followup.followupDate),
@@ -223,7 +260,9 @@ class _FollowupHistoryPageState extends State<FollowupHistoryPage> {
         child: const Icon(Icons.add),
         onPressed: () async {
           final followupBloc = context.read<FollowupBloc>();
-          await context.push('/families/${widget.familyId}/followups/add');
+          await context.push(
+            '/families/${widget.familyId}/followups/add?familyName=${Uri.encodeComponent(widget.familyName ?? '')}',
+          );
           if (mounted) {
             followupBloc.add(LoadFollowups(widget.familyId));
           }

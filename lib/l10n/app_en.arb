@@ -177,6 +177,8 @@
   "changeLanguage": "Change Language",
   "followupReport": "Followup Report",
   "allTypes": "All Types",
+  "allZones": "All Zones",
+  "allStreets": "All Streets",
   "familyName": "Family Name",
   "filterByType": "Filter by Type",
   "filterByDate": "Filter by Date",
@@ -193,5 +195,15 @@
   "week": "Week",
   "month": "Month",
   "filterBy": "Filter By",
-  "noBirthdaysInPeriod": "No birthdays found in this period."
+  "noBirthdaysInPeriod": "No birthdays found in this period.",
+  "followedUpOn": "Followed-up on {date}",
+  "inactivityPeriod": "Inactivity Period",
+  "moreThan3Months": "> 3 Months",
+  "moreThan6Months": "> 6 Months",
+  "moreThan9Months": "> 9 Months",
+  "lastFollowedUpOn": "Last followed up on {date}",
+  "neverFollowedUp": "Never followed up",
+  "neverFollowedUpFilter": "Never Followed Up",
+  "familyFollowups": "Families",
+  "memberFollowups": "Members"
 }

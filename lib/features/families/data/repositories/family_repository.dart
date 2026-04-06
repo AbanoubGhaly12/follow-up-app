@@ -9,11 +9,18 @@ class FamilyRepository {
 
   Future<List<FamilyModel>> getFamiliesForZone(String streetId) async {
     final db = await _databaseHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'families',
-      where: 'street_id = ?',
-      whereArgs: [streetId],
-    );
+    final String query = '''
+      SELECT *, 
+        (SELECT COUNT(*) FROM followups 
+         WHERE family_id = f.id 
+         AND strftime('%Y-%m', followup_date) = strftime('%Y-%m', 'now')) > 0 as is_followed_up_this_month,
+        (SELECT MAX(followup_date) FROM followups 
+         WHERE family_id = f.id 
+         AND strftime('%Y-%m', followup_date) = strftime('%Y-%m', 'now')) as last_followup_date
+      FROM families f
+      WHERE f.street_id = ?
+    ''';
+    final List<Map<String, dynamic>> maps = await db.rawQuery(query, [streetId]);
     return List.generate(maps.length, (i) {
       return FamilyModel.fromMap(maps[i]);
     });
@@ -21,7 +28,17 @@ class FamilyRepository {
 
   Future<List<FamilyModel>> getAllFamilies() async {
     final db = await _databaseHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query('families');
+    final String query = '''
+      SELECT *, 
+        (SELECT COUNT(*) FROM followups 
+         WHERE family_id = f.id 
+         AND strftime('%Y-%m', followup_date) = strftime('%Y-%m', 'now')) > 0 as is_followed_up_this_month,
+        (SELECT MAX(followup_date) FROM followups 
+         WHERE family_id = f.id 
+         AND strftime('%Y-%m', followup_date) = strftime('%Y-%m', 'now')) as last_followup_date
+      FROM families f
+    ''';
+    final List<Map<String, dynamic>> maps = await db.rawQuery(query);
     return List.generate(maps.length, (i) {
       return FamilyModel.fromMap(maps[i]);
     });

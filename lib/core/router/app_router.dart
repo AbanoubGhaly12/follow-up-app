@@ -131,7 +131,8 @@ final appRouter = GoRouter(
       path: '/families/:fid',
       builder: (context, state) {
         final fid = state.pathParameters['fid']!;
-        return MembersListPage(familyId: fid);
+        final familyName = state.uri.queryParameters['familyName'];
+        return MembersListPage(familyId: fid, familyName: familyName);
       },
       routes: [
         GoRoute(
@@ -153,14 +154,23 @@ final appRouter = GoRouter(
           path: 'followups',
           builder: (context, state) {
             final fid = state.pathParameters['fid']!;
-            return FollowupHistoryPage(familyId: fid);
+            final familyName = state.uri.queryParameters['familyName'];
+            return FollowupHistoryPage(familyId: fid, familyName: familyName);
           },
         ),
         GoRoute(
           path: 'followups/add',
           builder: (context, state) {
             final fid = state.pathParameters['fid']!;
-            return FollowupFormPage(familyId: fid);
+            final familyName = state.uri.queryParameters['familyName'];
+            final memberId = state.uri.queryParameters['memberId'];
+            final memberName = state.uri.queryParameters['memberName'];
+            return FollowupFormPage(
+              familyId: fid,
+              familyName: familyName,
+              memberId: memberId,
+              memberName: memberName,
+            );
           },
         ),
       ],

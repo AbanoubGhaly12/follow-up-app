@@ -10,8 +10,17 @@ import '../bloc/followup_event.dart';
 
 class FollowupFormPage extends StatefulWidget {
   final String familyId;
+  final String? familyName;
+  final String? memberId;
+  final String? memberName;
 
-  const FollowupFormPage({super.key, required this.familyId});
+  const FollowupFormPage({
+    super.key,
+    required this.familyId,
+    this.familyName,
+    this.memberId,
+    this.memberName,
+  });
 
   @override
   State<FollowupFormPage> createState() => _FollowupFormPageState();
@@ -48,6 +57,9 @@ class _FollowupFormPageState extends State<FollowupFormPage> {
       final followup = FollowupModel(
         id: const Uuid().v4(),
         familyId: widget.familyId,
+        familyName: widget.familyName,
+        memberId: widget.memberId,
+        memberName: widget.memberName,
         followupDate: _selectedDate,
         notes: _notesController.text,
         type: _selectedType,
@@ -88,6 +100,32 @@ class _FollowupFormPageState extends State<FollowupFormPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              if (widget.memberName != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.blue.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.person, color: Colors.blue.shade700),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          "${l10n.members}: ${widget.memberName}",
+                          style: TextStyle(
+                            color: Colors.blue.shade900,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
               // Date Picker
               InkWell(
                 onTap: _pickDate,

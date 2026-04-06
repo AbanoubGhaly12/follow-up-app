@@ -25,6 +25,8 @@ class MemberModel extends Equatable {
   final String profession;
   final List<String> weeklyOffDays;
   final MemberRole role;
+  final bool isFollowedUpThisMonth;
+  final DateTime? lastFollowupDate;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -46,6 +48,8 @@ class MemberModel extends Equatable {
     required this.profession,
     required this.weeklyOffDays,
     required this.role,
+    this.isFollowedUpThisMonth = false,
+    this.lastFollowupDate,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -69,6 +73,8 @@ class MemberModel extends Equatable {
     profession,
     weeklyOffDays,
     role,
+    isFollowedUpThisMonth,
+    lastFollowupDate,
     createdAt,
     updatedAt,
   ];
@@ -105,6 +111,11 @@ class MemberModel extends Equatable {
       role: MemberRole.values.firstWhere(
         (e) => e.toString().split('.').last == map['role'],
       ),
+      isFollowedUpThisMonth: (map['is_followed_up_this_month'] as int? ?? 0) == 1,
+      lastFollowupDate:
+          map['last_followup_date'] != null
+              ? DateTime.parse(map['last_followup_date'] as String)
+              : null,
       createdAt: DateTime.parse(map['created_at'] as String),
       updatedAt: DateTime.parse(map['updated_at'] as String),
     );
@@ -152,6 +163,8 @@ class MemberModel extends Equatable {
     String? profession,
     List<String>? weeklyOffDays,
     MemberRole? role,
+    bool? isFollowedUpThisMonth,
+    DateTime? lastFollowupDate,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -174,6 +187,9 @@ class MemberModel extends Equatable {
       profession: profession ?? this.profession,
       weeklyOffDays: weeklyOffDays ?? this.weeklyOffDays,
       role: role ?? this.role,
+      isFollowedUpThisMonth:
+          isFollowedUpThisMonth ?? this.isFollowedUpThisMonth,
+      lastFollowupDate: lastFollowupDate ?? this.lastFollowupDate,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

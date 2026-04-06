@@ -7,6 +7,10 @@ import '../bloc/followup_event.dart';
 import '../bloc/followup_state.dart';
 import '../../data/models/followup_model.dart';
 import '../../../../core/widgets/detail_view_sheet.dart';
+import '../../../zones/presentation/bloc/zone_bloc.dart';
+import '../../../streets/presentation/bloc/street_bloc.dart';
+import '../../../streets/presentation/bloc/street_event.dart';
+import '../../../streets/presentation/bloc/street_state.dart';
 
 class FollowupsReportPage extends StatefulWidget {
   const FollowupsReportPage({super.key});
@@ -15,23 +19,49 @@ class FollowupsReportPage extends StatefulWidget {
   State<FollowupsReportPage> createState() => _FollowupsReportPageState();
 }
 
-class _FollowupsReportPageState extends State<FollowupsReportPage> {
+class _FollowupsReportPageState extends State<FollowupsReportPage>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   DateTime? _selectedDate;
   FollowupType? _selectedType;
+  String? _selectedZoneId;
+  String? _selectedStreetId;
+  int? _selectedInactivityMonths;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      if (_tabController.indexIsChanging) {
+        _fetchFollowups();
+      }
+    });
+    context.read<ZoneBloc>().add(LoadZones());
     _fetchFollowups();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   void _fetchFollowups() {
     context.read<FollowupBloc>().add(
-      SearchFollowups(date: _selectedDate, type: _selectedType),
+      SearchFollowups(
+        date: _selectedDate,
+        type: _selectedType,
+        zoneId: _selectedZoneId,
+        streetId: _selectedStreetId,
+        inactivityMonths: _selectedInactivityMonths,
+        isFamilyReport: _tabController.index == 0,
+      ),
     );
   }
 
   Color _typeColor(FollowupType type) {
+    if (_selectedInactivityMonths != null) return Colors.red.shade700;
     switch (type) {
       case FollowupType.phone:
         return Colors.blue.shade600;
@@ -47,6 +77,7 @@ class _FollowupsReportPageState extends State<FollowupsReportPage> {
   }
 
   String _getTypeLabel(FollowupType type, AppLocalizations l10n) {
+    if (_selectedInactivityMonths != null) return l10n.inactivityPeriod;
     switch (type) {
       case FollowupType.phone:
         return l10n.typePhone;
@@ -62,6 +93,7 @@ class _FollowupsReportPageState extends State<FollowupsReportPage> {
   }
 
   IconData _typeIcon(FollowupType type) {
+    if (_selectedInactivityMonths != null) return Icons.warning_amber_rounded;
     switch (type) {
       case FollowupType.phone:
         return Icons.phone;
@@ -94,6 +126,19 @@ class _FollowupsReportPageState extends State<FollowupsReportPage> {
       ),
       body: Column(
         children: [
+          Material(
+            color: theme.primaryColor,
+            child: TabBar(
+              controller: _tabController,
+              indicatorColor: Colors.white,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.white70,
+              tabs: [
+                Tab(text: l10n.familyFollowups),
+                Tab(text: l10n.memberFollowups),
+              ],
+            ),
+          ),
           _buildFilters(l10n, theme),
           Expanded(
             child: BlocBuilder<FollowupBloc, FollowupState>(
@@ -134,19 +179,72 @@ class _FollowupsReportPageState extends State<FollowupsReportPage> {
           Row(
             children: [
               Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: _selectedDate ?? DateTime.now(),
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime.now().add(const Duration(days: 365)),
-                    );
-                    if (picked != null) {
-                      setState(() => _selectedDate = picked);
-                      _fetchFollowups();
-                    }
+                child: DropdownButtonFormField<int?>(
+                  value: _selectedInactivityMonths,
+                  decoration: InputDecoration(
+                    labelText: l10n.inactivityPeriod,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                    border: const OutlineInputBorder(),
+                  ),
+                  style: TextStyle(
+                    color: theme.textTheme.bodyLarge?.color,
+                    fontSize: 14,
+                  ),
+                  items: [
+                    DropdownMenuItem(value: null, child: Text(l10n.allTime)),
+                    DropdownMenuItem(
+                      value: -1,
+                      child: Text(l10n.neverFollowedUpFilter),
+                    ),
+                    DropdownMenuItem(
+                      value: 3,
+                      child: Text(l10n.moreThan3Months),
+                    ),
+                    DropdownMenuItem(
+                      value: 6,
+                      child: Text(l10n.moreThan6Months),
+                    ),
+                    DropdownMenuItem(
+                      value: 9,
+                      child: Text(l10n.moreThan9Months),
+                    ),
+                  ],
+                  onChanged: (val) {
+                    setState(() {
+                      _selectedInactivityMonths = val;
+                      if (val != null) {
+                        _selectedDate = null;
+                        _selectedType = null;
+                      }
+                    });
+                    _fetchFollowups();
                   },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed:
+                      _selectedInactivityMonths != null
+                          ? null
+                          : () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: _selectedDate ?? DateTime.now(),
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime.now().add(
+                                const Duration(days: 365),
+                              ),
+                            );
+                            if (picked != null) {
+                              setState(() => _selectedDate = picked);
+                              _fetchFollowups();
+                            }
+                          },
                   icon: const Icon(Icons.calendar_today, size: 18),
                   label: Text(
                     _selectedDate == null
@@ -167,22 +265,134 @@ class _FollowupsReportPageState extends State<FollowupsReportPage> {
               Expanded(
                 child: DropdownButtonFormField<FollowupType?>(
                   value: _selectedType,
+                  disabledHint: Text(l10n.allTypes),
                   decoration: const InputDecoration(
                     contentPadding: EdgeInsets.symmetric(horizontal: 12),
                     border: OutlineInputBorder(),
                   ),
-                  items: [
-                    DropdownMenuItem(value: null, child: Text(l10n.allTypes)),
-                    ...FollowupType.values.map(
-                      (type) => DropdownMenuItem(
-                        value: type,
-                        child: Text(_getTypeLabel(type, l10n)),
+                  style: TextStyle(
+                    color: theme.textTheme.bodyLarge?.color,
+                    fontSize: 14,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  items:
+                      _selectedInactivityMonths != null
+                          ? null
+                          : [
+                            DropdownMenuItem(
+                              value: null,
+                              child: Text(l10n.allTypes),
+                            ),
+                            ...FollowupType.values.map(
+                              (type) => DropdownMenuItem(
+                                value: type,
+                                child: Text(_getTypeLabel(type, l10n)),
+                              ),
+                            ),
+                          ],
+                  onChanged:
+                      _selectedInactivityMonths != null
+                          ? null
+                          : (val) {
+                            setState(() => _selectedType = val);
+                            _fetchFollowups();
+                          },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: BlocBuilder<ZoneBloc, ZoneState>(
+                  builder: (context, state) {
+                    List<DropdownMenuItem<String?>> items = [
+                      DropdownMenuItem(value: null, child: Text(l10n.allZones)),
+                    ];
+                    if (state is ZoneLoaded) {
+                      items.addAll(
+                        state.zones.map(
+                          (z) => DropdownMenuItem(
+                            value: z.id,
+                            child: Text(z.name),
+                          ),
+                        ),
+                      );
+                    }
+                    return DropdownButtonFormField<String?>(
+                      value: _selectedZoneId,
+                      decoration: const InputDecoration(
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
+                        border: OutlineInputBorder(),
                       ),
-                    ),
-                  ],
-                  onChanged: (val) {
-                    setState(() => _selectedType = val);
-                    _fetchFollowups();
+                      style: TextStyle(
+                        color: theme.textTheme.bodyLarge?.color,
+                        fontSize: 14,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      items: items,
+                      onChanged: (val) {
+                        setState(() {
+                          _selectedZoneId = val;
+                          _selectedStreetId = null;
+                        });
+                        if (val != null) {
+                          context.read<StreetBloc>().add(
+                            LoadStreets(zoneId: val),
+                          );
+                        }
+                        _fetchFollowups();
+                      },
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: BlocBuilder<StreetBloc, StreetState>(
+                  builder: (context, state) {
+                    List<DropdownMenuItem<String?>> items = [
+                      DropdownMenuItem(
+                        value: null,
+                        child: Text(l10n.allStreets),
+                      ),
+                    ];
+                    if (state is StreetLoaded && _selectedZoneId != null) {
+                      items.addAll(
+                        state.streets.map(
+                          (s) => DropdownMenuItem(
+                            value: s.id,
+                            child: Text(s.name),
+                          ),
+                        ),
+                      );
+                    }
+                    return DropdownButtonFormField<String?>(
+                      value: _selectedStreetId,
+                      decoration: const InputDecoration(
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
+                        border: OutlineInputBorder(),
+                      ),
+                      style: TextStyle(
+                        color: theme.textTheme.bodyLarge?.color,
+                        fontSize: 14,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      items: items,
+                      onChanged: (val) {
+                        setState(() => _selectedStreetId = val);
+                        _fetchFollowups();
+                      },
+                    );
                   },
                 ),
               ),
@@ -199,6 +409,28 @@ class _FollowupsReportPageState extends State<FollowupsReportPage> {
     DateFormat dateFormat,
   ) {
     final typeColor = _typeColor(followup.type);
+    final typeLabel = _getTypeLabel(followup.type, l10n);
+
+    // Neglect-specific subtitle and notes
+    String subtitleText;
+    String notesText;
+
+    if (_selectedInactivityMonths != null) {
+      if (followup.notes == 'NEVER') {
+        subtitleText = l10n.neverFollowedUp;
+        notesText = '';
+      } else {
+        subtitleText = l10n.lastFollowedUpOn(
+          dateFormat.format(followup.followupDate),
+        );
+        notesText = '';
+      }
+    } else {
+      subtitleText =
+          "${_getTypeLabel(followup.type, l10n)} | ${dateFormat.format(followup.followupDate)}";
+      notesText = followup.notes;
+    }
+
     return Card(
       elevation: 4,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -207,16 +439,35 @@ class _FollowupsReportPageState extends State<FollowupsReportPage> {
         onTap: () {
           DetailViewSheet.show(
             context,
-            title: _getTypeLabel(followup.type, l10n),
+            title: typeLabel,
             items: [
               DetailItem(l10n.familyName, followup.familyName ?? l10n.unknown),
-              DetailItem(l10n.followupType, _getTypeLabel(followup.type, l10n)),
+              if (followup.memberName != null)
+                DetailItem(l10n.members, followup.memberName!),
               DetailItem(
-                l10n.followupDate,
-                dateFormat.format(followup.followupDate),
+                _selectedInactivityMonths != null
+                    ? l10n.inactivityPeriod
+                    : l10n.followupType,
+                typeLabel,
               ),
-              DetailItem(l10n.followupNotes, followup.notes),
-              DetailItem(l10n.createdAt, dateFormat.format(followup.createdAt)),
+              if (_selectedInactivityMonths == null)
+                DetailItem(
+                  l10n.followupDate,
+                  dateFormat.format(followup.followupDate),
+                ),
+              if (_selectedInactivityMonths == null)
+                DetailItem(l10n.followupNotes, followup.notes),
+              if (_selectedInactivityMonths != null &&
+                  followup.notes != 'NEVER')
+                DetailItem(
+                  l10n.lastFollowedUpOn(''),
+                  dateFormat.format(followup.followupDate),
+                ),
+              if (_selectedInactivityMonths == null)
+                DetailItem(
+                  l10n.createdAt,
+                  dateFormat.format(followup.createdAt),
+                ),
             ],
           );
         },
@@ -232,54 +483,28 @@ class _FollowupsReportPageState extends State<FollowupsReportPage> {
               backgroundColor: typeColor.withAlpha(26), // 0.1 * 255 = ~26
               child: Icon(_typeIcon(followup.type), color: typeColor),
             ),
-            title: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    followup.familyName ?? l10n.unknown,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                Text(
-                  dateFormat.format(followup.followupDate),
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                ),
-              ],
+            title: Text(
+              "${followup.familyName ?? l10n.unknown}${followup.memberName != null ? ' - ${followup.memberName}' : ''}",
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-            subtitle: Padding(
-              padding: const EdgeInsets.only(top: 8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: typeColor.withAlpha(26), // 0.1 * 255
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      _getTypeLabel(followup.type, l10n),
-                      style: TextStyle(
-                        color: typeColor,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 4),
+                Text(
+                  subtitleText,
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                ),
+                if (notesText.isNotEmpty) ...[
+                  const SizedBox(height: 4),
                   Text(
-                    followup.notes,
+                    notesText,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: Colors.grey.shade800),
+                    style: const TextStyle(fontSize: 14),
                   ),
                 ],
-              ),
+              ],
             ),
           ),
         ),

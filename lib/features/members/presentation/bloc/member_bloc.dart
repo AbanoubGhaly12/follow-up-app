@@ -22,10 +22,11 @@ class MemberBloc extends Bloc<MemberEvent, MemberState> {
   ) async {
     emit(MemberLoading());
     try {
-      final members =
-          event.familyId != null
-              ? await _memberRepository.getMembersByFamily(event.familyId!)
-              : await _memberRepository.getAllMembers();
+      final members = await _memberRepository.getMembers(
+        familyId: event.familyId,
+        zoneId: event.zoneId,
+        streetId: event.streetId,
+      );
       emit(MemberLoaded(members));
     } catch (e) {
       emit(MemberError(e.toString()));

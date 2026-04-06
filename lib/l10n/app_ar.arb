@@ -177,6 +177,8 @@
   "changeLanguage": "تغيير اللغة",
   "followupReport": "تقارير المتابعة",
   "allTypes": "جميع الأنواع",
+  "allZones": "جميع المناطق",
+  "allStreets": "جميع الشوارع",
   "familyName": "اسم العائلة",
   "filterByType": "تصفية بالنوع",
   "filterByDate": "تصفية بالتاريخ",
@@ -193,5 +195,15 @@
   "week": "أسبوع",
   "month": "شهر",
   "filterBy": "تصفية بـ",
-  "noBirthdaysInPeriod": "لا توجد أعياد ميلاد في هذه الفترة."
+  "noBirthdaysInPeriod": "لا توجد أعياد ميلاد في هذه الفترة.",
+  "followedUpOn": "تمت المتابعة في {date}",
+  "inactivityPeriod": "فترة عدم المتابعة",
+  "moreThan3Months": "أكثر من 3 أشهر",
+  "moreThan6Months": "أكثر من 6 أشهر",
+  "moreThan9Months": "أكثر من 9 أشهر",
+  "lastFollowedUpOn": "آخر متابعة كانت في {date}",
+  "neverFollowedUp": "لم تتم المتابعة من قبل",
+  "neverFollowedUpFilter": "لم تتم المتابعة أبداً",
+  "familyFollowups": "العائلات",
+  "memberFollowups": "الأعضاء"
 }

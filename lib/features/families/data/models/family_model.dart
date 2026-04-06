@@ -32,6 +32,8 @@ class FamilyModel extends Equatable {
   final DateTime? marriageDate;
   final String landline;
   final AddressInfo addressInfo;
+  final bool isFollowedUpThisMonth;
+  final DateTime? lastFollowupDate;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -42,6 +44,8 @@ class FamilyModel extends Equatable {
     this.marriageDate,
     required this.landline,
     required this.addressInfo,
+    this.isFollowedUpThisMonth = false,
+    this.lastFollowupDate,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -54,6 +58,8 @@ class FamilyModel extends Equatable {
     marriageDate,
     landline,
     addressInfo,
+    isFollowedUpThisMonth,
+    lastFollowupDate,
     createdAt,
     updatedAt,
   ];
@@ -75,6 +81,11 @@ class FamilyModel extends Equatable {
         flatNumber: map['flat_number'] as String? ?? '',
         streetFrom: map['street_from'] as String? ?? '',
       ),
+      isFollowedUpThisMonth: (map['is_followed_up_this_month'] as int? ?? 0) == 1,
+      lastFollowupDate:
+          map['last_followup_date'] != null
+              ? DateTime.parse(map['last_followup_date'] as String)
+              : null,
       createdAt: DateTime.parse(map['created_at'] as String),
       updatedAt: DateTime.parse(map['updated_at'] as String),
     );
@@ -104,6 +115,8 @@ class FamilyModel extends Equatable {
     DateTime? marriageDate,
     String? landline,
     AddressInfo? addressInfo,
+    bool? isFollowedUpThisMonth,
+    DateTime? lastFollowupDate,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -114,6 +127,9 @@ class FamilyModel extends Equatable {
       marriageDate: marriageDate ?? this.marriageDate,
       landline: landline ?? this.landline,
       addressInfo: addressInfo ?? this.addressInfo,
+      isFollowedUpThisMonth:
+          isFollowedUpThisMonth ?? this.isFollowedUpThisMonth,
+      lastFollowupDate: lastFollowupDate ?? this.lastFollowupDate,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

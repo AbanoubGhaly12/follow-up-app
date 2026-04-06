@@ -21,7 +21,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 7,
+      version: 8,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -69,6 +69,10 @@ class DatabaseHelper {
     }
     if (oldVersion < 7) {
       await db.execute('ALTER TABLE followups ADD COLUMN family_name TEXT');
+    }
+    if (oldVersion < 8) {
+      await db.execute('ALTER TABLE followups ADD COLUMN member_id TEXT');
+      await db.execute('ALTER TABLE followups ADD COLUMN member_name TEXT');
     }
   }
 
@@ -161,12 +165,15 @@ class DatabaseHelper {
         id TEXT PRIMARY KEY,
         family_id TEXT,
         family_name TEXT,
+        member_id TEXT,
+        member_name TEXT,
         followup_date TEXT,
         notes TEXT,
         type TEXT,
         created_at TEXT,
         updated_at TEXT,
-        FOREIGN KEY (family_id) REFERENCES families (id) ON DELETE CASCADE
+        FOREIGN KEY (family_id) REFERENCES families (id) ON DELETE CASCADE,
+        FOREIGN KEY (member_id) REFERENCES members (id) ON DELETE CASCADE
       )
     ''');
   }

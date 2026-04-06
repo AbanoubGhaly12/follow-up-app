@@ -4,16 +4,18 @@ abstract class MemberEvent extends Equatable {
   const MemberEvent();
 
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
 class LoadMembers extends MemberEvent {
   final String? familyId;
+  final String? zoneId;
+  final String? streetId;
 
-  const LoadMembers({this.familyId});
+  const LoadMembers({this.familyId, this.zoneId, this.streetId});
 
   @override
-  List<Object> get props => [familyId ?? ''];
+  List<Object?> get props => [familyId, zoneId, streetId];
 }
 
 class AddMember extends MemberEvent {
@@ -22,7 +24,7 @@ class AddMember extends MemberEvent {
   const AddMember(this.member);
 
   @override
-  List<Object> get props => [member];
+  List<Object?> get props => [member];
 }
 
 class UpdateMember extends MemberEvent {
@@ -31,7 +33,7 @@ class UpdateMember extends MemberEvent {
   const UpdateMember(this.member);
 
   @override
-  List<Object> get props => [member];
+  List<Object?> get props => [member];
 }
 
 class DeleteMember extends MemberEvent {
@@ -41,5 +43,5 @@ class DeleteMember extends MemberEvent {
   const DeleteMember(this.id, this.familyId);
 
   @override
-  List<Object> get props => [id, familyId];
+  List<Object?> get props => [id, familyId];
 }

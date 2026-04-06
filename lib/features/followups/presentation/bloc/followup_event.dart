@@ -37,8 +37,27 @@ class DeleteFollowup extends FollowupEvent {
 class SearchFollowups extends FollowupEvent {
   final DateTime? date;
   final FollowupType? type;
-  const SearchFollowups({this.date, this.type});
+  final String? zoneId;
+  final String? streetId;
+  final int? inactivityMonths;
+  final bool? isFamilyReport;
+
+  const SearchFollowups({
+    this.date,
+    this.type,
+    this.zoneId,
+    this.streetId,
+    this.inactivityMonths,
+    this.isFamilyReport,
+  });
 
   @override
-  List<Object?> get props => [date, type];
+  List<Object?> get props => [
+    date,
+    type,
+    zoneId,
+    streetId,
+    inactivityMonths,
+    isFamilyReport,
+  ];
 }

@@ -84,123 +84,201 @@ class _FamiliesListPageState extends State<FamiliesListPage> {
                               ),
                             ),
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              ListTile(
-                                title: Text(
-                                  '$headText (${family.landline})',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                subtitle: Text(subtitle),
-                                onTap: () {
-                                  context.push('/families/${family.id}');
-                                },
-                              ),
-                              const Divider(height: 1),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                child: Row(
-                                  children: [
-                                    TextButton.icon(
-                                      onPressed: () {
-                                        context.push(
-                                          '/families/${family.id}/followups',
-                                        );
-                                      },
-                                      icon: Icon(
-                                        Icons.history,
-                                        color: Colors.orange.shade800,
-                                      ),
-                                      label: Text(
-                                        l10n.followups,
-                                        style: TextStyle(
-                                          color: Colors.orange.shade900,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                    const Spacer(),
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.visibility,
-                                        color: Colors.teal,
-                                      ),
-                                      tooltip: l10n.details,
-                                      onPressed: () {
-                                        final addr = family.addressInfo;
-                                        DetailViewSheet.show(
-                                          context,
-                                          title:
-                                              family.familyHead.isNotEmpty
-                                                  ? family.familyHead
-                                                  : l10n.families,
-                                          items: [
-                                            DetailItem(
-                                              l10n.familyHead,
-                                              family.familyHead,
-                                            ),
-                                            DetailItem(
-                                              l10n.landline,
-                                              family.landline,
-                                            ),
-                                            DetailItem(
-                                              l10n.streetName,
-                                              addr.street,
-                                            ),
-                                            DetailItem(
-                                              l10n.buildingNumber,
-                                              addr.buildingNumber,
-                                            ),
-                                            DetailItem(
-                                              l10n.floorNumber,
-                                              addr.floorNumber,
-                                            ),
-                                            DetailItem(
-                                              l10n.flatNumber,
-                                              addr.flatNumber,
-                                            ),
-                                            DetailItem(
-                                              l10n.streetFrom,
-                                              addr.streetFrom,
-                                            ),
-                                            if (family.marriageDate != null)
-                                              DetailItem(
-                                                l10n.marriageDate(
-                                                  DateFormat(
-                                                    'dd MMM yyyy',
-                                                  ).format(
-                                                    family.marriageDate!,
-                                                  ),
+                          child: InkWell(
+                            onTap: () {
+                              context.push(
+                                '/families/${family.id}?familyName=${Uri.encodeComponent(family.familyHead)}',
+                              );
+                            },
+                            borderRadius: BorderRadius.circular(12),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                headText,
+                                                style: const TextStyle(
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.bold,
+                                                  letterSpacing: 0.5,
                                                 ),
-                                                '',
+                                              ),
+                                            ),
+                                            if (family.isFollowedUpThisMonth &&
+                                                family.lastFollowupDate !=
+                                                    null)
+                                              Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 8.0,
+                                                    ),
+                                                child: Row(
+                                                  children: [
+                                                    const Icon(
+                                                      Icons.check_circle,
+                                                      color: Colors.green,
+                                                      size: 16,
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                      l10n.followedUpOn(
+                                                        DateFormat(
+                                                          'dd/MM/yyyy',
+                                                        ).format(
+                                                          family
+                                                              .lastFollowupDate!,
+                                                        ),
+                                                      ),
+                                                      style: const TextStyle(
+                                                        color: Colors.green,
+                                                        fontSize: 12,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
                                           ],
-                                        );
-                                      },
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.edit,
-                                        color: Colors.blue,
+                                        ),
                                       ),
-                                      tooltip: l10n.edit,
-                                      onPressed: () {
-                                        context.push(
-                                          '/streets/${family.streetId}/families/edit',
-                                          extra: family,
-                                        );
-                                      },
+                                      Text(
+                                        family.landline,
+                                        style: TextStyle(
+                                          color: Colors.grey.shade600,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    subtitle,
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 14,
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  const Divider(),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      TextButton.icon(
+                                        onPressed: () {
+                                          context.push(
+                                            '/families/${family.id}/followups?familyName=${Uri.encodeComponent(family.familyHead)}',
+                                          );
+                                        },
+                                        icon: Icon(
+                                          Icons.history,
+                                          color: Colors.orange.shade800,
+                                          size: 20,
+                                        ),
+                                        label: Text(
+                                          l10n.followups,
+                                          style: TextStyle(
+                                            color: Colors.orange.shade900,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        style: TextButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                          ),
+                                          backgroundColor: Colors.orange
+                                              .withAlpha(20),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.visibility_outlined,
+                                          color: Colors.teal,
+                                        ),
+                                        onPressed: () {
+                                          final addr = family.addressInfo;
+                                          DetailViewSheet.show(
+                                            context,
+                                            title:
+                                                family.familyHead.isNotEmpty
+                                                    ? family.familyHead
+                                                    : l10n.families,
+                                            items: [
+                                              DetailItem(
+                                                l10n.familyHead,
+                                                family.familyHead,
+                                              ),
+                                              DetailItem(
+                                                l10n.landline,
+                                                family.landline,
+                                              ),
+                                              DetailItem(
+                                                l10n.streetName,
+                                                addr.street,
+                                              ),
+                                              DetailItem(
+                                                l10n.buildingNumber,
+                                                addr.buildingNumber,
+                                              ),
+                                              DetailItem(
+                                                l10n.floorNumber,
+                                                addr.floorNumber,
+                                              ),
+                                              DetailItem(
+                                                l10n.flatNumber,
+                                                addr.flatNumber,
+                                              ),
+                                              DetailItem(
+                                                l10n.streetFrom,
+                                                addr.streetFrom,
+                                              ),
+                                              if (family.marriageDate != null)
+                                                DetailItem(
+                                                  l10n.marriageDate(
+                                                    DateFormat(
+                                                      'dd MMM yyyy',
+                                                    ).format(
+                                                      family.marriageDate!,
+                                                    ),
+                                                  ),
+                                                  '',
+                                                ),
+                                            ],
+                                          );
+                                        },
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.edit_outlined,
+                                          color: Colors.blue,
+                                        ),
+                                        onPressed: () {
+                                          context.push(
+                                            '/streets/${family.streetId}/families/edit',
+                                            extra: family,
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
-                            ],
+                            ),
                           ),
                         ),
                       );
