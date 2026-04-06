@@ -1,0 +1,197 @@
+{
+  "@@locale": "ar",
+
+  "appTitle": "متابعة الكنيسة",
+  "language": "اللغة",
+  "english": "الإنجليزية",
+  "arabic": "العربية",
+
+  "zones": "المناطق",
+  "addZone": "إضافة منطقة",
+  "editZone": "تعديل منطقة",
+  "noZonesFound": "لا توجد مناطق. أضف واحدة!",
+  "saveZone": "حفظ المنطقة",
+
+  "dashboard": "لوحة القيادة",
+  "stats": "الإحصائيات",
+  "totalZones": "إجمالي المناطق",
+  "totalStreets": "إجمالي الشوارع",
+  "totalFamilies": "إجمالي العائلات",
+  "totalMembers": "إجمالي الأعضاء",
+  "quickActions": "إجراءات سريعة",
+  "allStreets": "جميع الشوارع",
+  "allMembers": "جميع الأعضاء",
+  "birthdays": "أعياد الميلاد",
+  "birthdaysThisMonth": "أعياد ميلاد هذا الشهر",
+  "messageTemplates": "قوالب الرسائل",
+  "addTemplate": "إضافة قالب",
+  "editTemplate": "تعديل القالب",
+  "title": "العنوان",
+  "templateType": "نوع القالب",
+  "noTemplates": "لا توجد قوالب محفوظة بعد.",
+  "save": "حفظ",
+  "requiredField": "هذا الحقل مطلوب",
+
+  "followups": "سجل المتابعة",
+  "addFollowup": "إضافة متابعة",
+  "followupDate": "تاريخ المتابعة",
+  "followupNotes": "ملاحظات",
+  "followupType": "نوع المتابعة",
+  "noFollowupsFound": "لا توجد متابعات مسجلة بعد.",
+
+  "search": "بحث...",
+
+  "streets": "الشوارع",
+  "addStreet": "إضافة شارع",
+  "editStreet": "تعديل شارع",
+  "saveStreet": "حفظ الشارع",
+  "noStreetsFound": "لا توجد شوارع. أضف واحداً!",
+
+  "families": "العائلات",
+  "addFamily": "إضافة عائلة",
+  "editFamily": "تعديل عائلة",
+  "noFamiliesFound": "لا توجد عائلات. أضف واحدة!",
+  "saveFamily": "حفظ العائلة",
+  "familyHead": "رب العائلة",
+
+  "members": "الأعضاء",
+  "addMember": "إضافة عضو",
+  "editMember": "تعديل عضو",
+  "noMembersFound": "لا يوجد أعضاء. أضف واحداً!",
+  "saveMember": "حفظ العضو",
+
+  "name": "الاسم",
+  "description": "الوصف",
+  "email": "البريد الإلكتروني",
+  "phoneNumber": "رقم الهاتف",
+  "address": "العنوان",
+  "requiredField": "مطلوب",
+
+  "mobileNumber": "رقم الهاتف المحمول",
+  "nationalId": "الرقم القومي",
+  "profession": "الوظيفة",
+  "churchInfo": "معلومات الكنيسة",
+  "belongToChurch": "ينتمي لكنيسة",
+  "confessionFather": "أب الاعتراف",
+  "confessionFatherChurch": "كنيسة أب الاعتراف",
+  
+  "maritalStatus": "الحالة الاجتماعية",
+  "educationStage": "المرحلة الدراسية",
+  "familyRole": "الدور في العائلة",
+  "weeklyOffDays": "أيام الإجازة الأسبوعية",
+  
+  "isDead": "متوفى؟",
+  "selectMarriageDate": "تحديد تاريخ الزواج (اختياري)",
+  "marriageDate": "تاريخ الزواج: {date}",
+  "@marriageDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "landline": "الهاتف الأرضي",
+  "buildingNumber": "رقم المبنى",
+  "floorNumber": "رقم الطابق",
+  "flatNumber": "رقم الشقة",
+  "streetName": "اسم الشارع",
+  "streetFrom": "متفرع من",
+  "selectDeathDate": "تحديد تاريخ الوفاة",
+  "deathDate": "تاريخ الوفاة: {date}",
+  "@deathDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "selectBirthdate": "تحديد تاريخ الميلاد",
+  "birthdate": "تاريخ الميلاد: {date}",
+  "@birthdate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+
+  "delete": "حذف",
+  "error": "خطأ: {message}",
+  "@error": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "initialState": "الحالة الأولية",
+
+  "sat": "السبت",
+  "sun": "الأحد",
+  "mon": "الإثنين",
+  "tues": "الثلاثاء",
+  "wed": "الأربعاء",
+  "thu": "الخميس",
+  "fri": "الجمعة",
+
+  "single": "أعزب",
+  "married": "متزوج",
+  "widow": "أرمل",
+  "divorced": "مطلق",
+
+  "school": "مرحلة مدرسية",
+  "university": "جامعي",
+  "graduate": "خريج",
+
+  "husband": "الزوج",
+  "wife": "الزوجة",
+  "son": "الابن",
+  "daughter": "الابنة",
+  "basic_member": "عضو أساسي",
+
+  "tag": "علامة",
+  "admins": "المسؤولين",
+  "zoneId": "رقم المنطقة",
+  "cancel": "إلغاء",
+  "confirmDeleteZone": "هل أنت متأكد أنك تريد حذف هذه المنطقة؟",
+  "confirmDeleteStreet": "هل أنت متأكد أنك تريد حذف هذا الشارع؟",
+  "confirmDeleteFamily": "هل أنت متأكد أنك تريد حذف هذه العائلة؟",
+  "confirmDeleteMember": "هل أنت متأكد أنك تريد حذف هذا العضو؟",
+  "pleaseSelectBirthdate": "يرجى تحديد تاريخ الميلاد",
+  "couldNotLaunchApp": "تعذر فتح تطبيق المراسلة.",
+  "noBirthdayTemplates": "لا توجد قوالب أعياد ميلاد! يرجى إنشاء واحدة في قوالب الرسائل أولاً.",
+  "noBirthdaysOnDate": "لا توجد أعياد ميلاد في هذا التاريخ!",
+  "noTemplatesAvailable": "لا توجد قوالب متاحة. قم بإنشاء واحدة في قوالب الرسائل أولاً.",
+  "turnsAgeOn": "يبلغ {age} في {date}",
+  "@turnsAgeOn": {
+    "placeholders": {
+      "age": { "type": "String" },
+      "date": { "type": "String" }
+    }
+  },
+  "content": "المحتوى",
+  "insertMemberName": "إدراج {MemberName}",
+  "createdAt": "تاريخ الإنشاء",
+  "confirmDeleteFollowup": "هل أنت متأكد أنك تريد حذف هذه المتابعة؟",
+  "changeLanguage": "تغيير اللغة",
+  "followupReport": "تقارير المتابعة",
+  "allTypes": "جميع الأنواع",
+  "familyName": "اسم العائلة",
+  "filterByType": "تصفية بالنوع",
+  "filterByDate": "تصفية بالتاريخ",
+  "allTime": "كل الأوقات",
+  "unknown": "غير معروف",
+  "typePhone": "مكالمة هاتفية",
+  "typeVisit": "زيارة",
+  "typeMeeting": "اجتماع كنيسة",
+  "typeOnline": "مكالمة أونلاين",
+  "typeOther": "أخرى",
+  "edit": "تعديل",
+  "details": "تفاصيل",
+  "day": "يوم",
+  "week": "أسبوع",
+  "month": "شهر",
+  "filterBy": "تصفية بـ",
+  "noBirthdaysInPeriod": "لا توجد أعياد ميلاد في هذه الفترة."
+}

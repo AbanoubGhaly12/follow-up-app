@@ -1,0 +1,197 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "Church Follow Up",
+  "language": "Language",
+  "english": "English",
+  "arabic": "Arabic",
+
+  "zones": "Zones",
+  "addZone": "Add Zone",
+  "editZone": "Edit Zone",
+  "noZonesFound": "No zones found. Add one!",
+  "saveZone": "Save Zone",
+
+  "dashboard": "Dashboard",
+  "stats": "Statistics",
+  "totalZones": "Total Zones",
+  "totalStreets": "Total Streets",
+  "totalFamilies": "Total Families",
+  "totalMembers": "Total Members",
+  "quickActions": "Quick Actions",
+  "allStreets": "All Streets",
+  "allMembers": "All Members",
+  "birthdays": "Birthdays",
+  "birthdaysThisMonth": "Birthdays This Month",
+  "messageTemplates": "Message Templates",
+  "addTemplate": "Add Template",
+  "editTemplate": "Edit Template",
+  "title": "Title",
+  "templateType": "Template Type",
+  "noTemplates": "No templates saved yet.",
+  "save": "Save",
+  "requiredField": "This field is required",
+
+  "followups": "Followup History",
+  "addFollowup": "Add Followup",
+  "followupDate": "Followup Date",
+  "followupNotes": "Notes",
+  "followupType": "Followup Type",
+  "noFollowupsFound": "No followups recorded yet.",
+
+  "search": "Search...",
+
+  "streets": "Streets",
+  "addStreet": "Add Street",
+  "editStreet": "Edit Street",
+  "saveStreet": "Save Street",
+  "noStreetsFound": "No streets found. Add one!",
+
+  "families": "Families",
+  "addFamily": "Add Family",
+  "editFamily": "Edit Family",
+  "noFamiliesFound": "No families found. Add one!",
+  "saveFamily": "Save Family",
+  "familyHead": "Family Head",
+
+  "members": "Members",
+  "addMember": "Add Member",
+  "editMember": "Edit Member",
+  "noMembersFound": "No members found. Add one!",
+  "saveMember": "Save Member",
+
+  "name": "Name",
+  "description": "Description",
+  "email": "Email",
+  "phoneNumber": "Phone Number",
+  "address": "Address",
+  "requiredField": "Required",
+
+  "mobileNumber": "Mobile Number",
+  "nationalId": "National ID",
+  "profession": "Profession",
+  "churchInfo": "Church Info",
+  "belongToChurch": "Belong To Church",
+  "confessionFather": "Confession Father",
+  "confessionFatherChurch": "Confession Father Church",
+  
+  "maritalStatus": "Marital Status",
+  "educationStage": "Education Stage",
+  "familyRole": "Family Role",
+  "weeklyOffDays": "Weekly Off Days",
+  
+  "isDead": "Is Dead?",
+  "selectMarriageDate": "Select Marriage Date (Optional)",
+  "marriageDate": "Marriage Date: {date}",
+  "@marriageDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "landline": "Landline",
+  "buildingNumber": "Building Number",
+  "floorNumber": "Floor Number",
+  "flatNumber": "Flat Number",
+  "streetName": "Street Name",
+  "streetFrom": "Street From",
+  "selectDeathDate": "Select Death Date",
+  "deathDate": "Death Date: {date}",
+  "@deathDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "selectBirthdate": "Select Birthdate",
+  "birthdate": "Birthdate: {date}",
+  "@birthdate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+
+  "delete": "Delete",
+  "error": "Error: {message}",
+  "@error": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "initialState": "Initial State",
+
+  "sat": "SAT",
+  "sun": "SUN",
+  "mon": "MON",
+  "tues": "TUES",
+  "wed": "WED",
+  "thu": "THU",
+  "fri": "FRI",
+
+  "single": "Single",
+  "married": "Married",
+  "widow": "Widow",
+  "divorced": "Divorced",
+
+  "school": "School Stage",
+  "university": "University",
+  "graduate": "Graduate",
+
+  "husband": "Husband",
+  "wife": "Wife",
+  "son": "Son",
+  "daughter": "Daughter",
+  "basic_member": "Basic Member",
+
+  "tag": "Tag",
+  "admins": "Admins",
+  "zoneId": "Zone ID",
+  "cancel": "Cancel",
+  "confirmDeleteZone": "Are you sure you want to delete this zone?",
+  "confirmDeleteStreet": "Are you sure you want to delete this street?",
+  "confirmDeleteFamily": "Are you sure you want to delete this family?",
+  "confirmDeleteMember": "Are you sure you want to delete this member?",
+  "pleaseSelectBirthdate": "Please select birthdate",
+  "couldNotLaunchApp": "Could not launch messaging app.",
+  "noBirthdayTemplates": "No Birthday templates available! Please create one in Message Templates first.",
+  "noBirthdaysOnDate": "No birthdays on this date!",
+  "noTemplatesAvailable": "No templates available. Create one in Message Templates first.",
+  "turnsAgeOn": "Turns {age} on {date}",
+  "@turnsAgeOn": {
+    "placeholders": {
+      "age": { "type": "String" },
+      "date": { "type": "String" }
+    }
+  },
+  "content": "Content",
+  "insertMemberName": "Insert {MemberName}",
+  "createdAt": "Created At",
+  "confirmDeleteFollowup": "Are you sure you want to delete this followup?",
+  "changeLanguage": "Change Language",
+  "followupReport": "Followup Report",
+  "allTypes": "All Types",
+  "familyName": "Family Name",
+  "filterByType": "Filter by Type",
+  "filterByDate": "Filter by Date",
+  "allTime": "All Time",
+  "unknown": "Unknown",
+  "typePhone": "Phone Call",
+  "typeVisit": "Visit",
+  "typeMeeting": "Church Meeting",
+  "typeOnline": "Online Call",
+  "typeOther": "Other",
+  "edit": "Edit",
+  "details": "Details",
+  "day": "Day",
+  "week": "Week",
+  "month": "Month",
+  "filterBy": "Filter By",
+  "noBirthdaysInPeriod": "No birthdays found in this period."
+}
