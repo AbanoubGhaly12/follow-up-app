@@ -47,7 +47,7 @@ class _FollowupsReportPageState extends State<FollowupsReportPage>
     super.dispose();
   }
 
-  void _fetchFollowups() {
+  void _fetchFollowups({bool forceSync = false}) {
     context.read<FollowupBloc>().add(
       SearchFollowups(
         date: _selectedDate,
@@ -56,6 +56,7 @@ class _FollowupsReportPageState extends State<FollowupsReportPage>
         streetId: _selectedStreetId,
         inactivityMonths: _selectedInactivityMonths,
         isFamilyReport: _tabController.index == 0,
+        forceSync: forceSync,
       ),
     );
   }
@@ -120,7 +121,7 @@ class _FollowupsReportPageState extends State<FollowupsReportPage>
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _fetchFollowups,
+            onPressed: () => _fetchFollowups(forceSync: true),
           ),
         ],
       ),

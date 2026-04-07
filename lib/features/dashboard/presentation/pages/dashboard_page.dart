@@ -5,6 +5,9 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../cubit/dashboard_cubit.dart';
 import '../cubit/dashboard_state.dart';
 import '../../../../core/settings/settings_cubit.dart';
+import '../../../auth/presentation/cubit/auth_cubit.dart';
+import '../../../auth/presentation/cubit/auth_state.dart';
+import '../../../auth/data/models/user_model.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -17,7 +20,15 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   void initState() {
     super.initState();
-    context.read<DashboardCubit>().loadStats();
+    final authState = context.read<AuthCubit>().state;
+    if (authState is AuthAuthenticated) {
+      context.read<DashboardCubit>().loadStats(
+        userId: authState.user.uid,
+        isSuperAdmin: authState.profile?.isSuperAdmin ?? false,
+      );
+    } else {
+      context.read<DashboardCubit>().loadStats();
+    }
   }
 
   @override
@@ -30,7 +41,6 @@ class _DashboardPageState extends State<DashboardPage> {
         actions: [
           BlocBuilder<SettingsCubit, SettingsState>(
             builder: (context, state) {
-              final isArabic = state.locale.languageCode == 'ar';
               return IconButton(
                 icon: const Icon(Icons.language),
                 tooltip: l10n.changeLanguage,
@@ -43,7 +53,37 @@ class _DashboardPageState extends State<DashboardPage> {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
-              context.read<DashboardCubit>().loadStats();
+              final authState = context.read<AuthCubit>().state;
+              if (authState is AuthAuthenticated) {
+                context.read<DashboardCubit>().loadStats(
+                  userId: authState.user.uid,
+                  isSuperAdmin: authState.profile?.isSuperAdmin ?? false,
+                );
+              } else {
+                context.read<DashboardCubit>().loadStats();
+              }
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: Text(l10n.logout),
+                  content: Text(l10n.logoutConfirm),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        context.read<AuthCubit>().signOut();
+                      },
+                      child: Text(l10n.logout, style: const TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                ),
+              );
             },
           ),
         ],
@@ -114,46 +154,82 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _buildActionButton(
-                    context,
-                    title: l10n.zones,
-                    icon: Icons.map,
-                    onTap: () => context.push('/zones'),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildActionButton(
-                    context,
-                    title: l10n.allStreets,
-                    icon: Icons.add_road,
-                    onTap: () => context.push('/streets'),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildActionButton(
-                    context,
-                    title: l10n.allMembers,
-                    icon: Icons.people,
-                    onTap: () => context.push('/members'),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildActionButton(
-                    context,
-                    title: l10n.birthdays,
-                    icon: Icons.cake,
-                    onTap: () => context.push('/birthdays'),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildActionButton(
-                    context,
-                    title: l10n.messageTemplates ?? "Message Templates",
-                    icon: Icons.message,
-                    onTap: () => context.push('/templates'),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildActionButton(
-                    context,
-                    title: l10n.followupReport,
-                    icon: Icons.assessment,
-                    onTap: () => context.push('/followups/report'),
+                  BlocBuilder<AuthCubit, AuthState>(
+                    builder: (context, authState) {
+                      final profile = (authState is AuthAuthenticated) ? authState.profile : null;
+                      final isSubAdmin = profile?.isSubAdmin ?? false;
+                      
+                      return Column(
+                        children: [
+                          _buildActionButton(
+                            context,
+                            title: l10n.zones,
+                            icon: Icons.map,
+                            onTap: () => context.push('/zones'),
+                          ),
+                          if (!isSubAdmin) ...[
+                            const SizedBox(height: 12),
+                            _buildActionButton(
+                              context,
+                              title: l10n.allStreets,
+                              icon: Icons.add_road,
+                              onTap: () => context.push('/streets'),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildActionButton(
+                              context,
+                              title: l10n.allMembers,
+                              icon: Icons.people,
+                              onTap: () => context.push('/members'),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildActionButton(
+                              context,
+                              title: l10n.birthdays,
+                              icon: Icons.cake,
+                              onTap: () => context.push('/birthdays'),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildActionButton(
+                              context,
+                              title: l10n.messageTemplates ?? "Message Templates",
+                              icon: Icons.message,
+                              onTap: () => context.push('/templates'),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildActionButton(
+                              context,
+                              title: l10n.followupReport,
+                              icon: Icons.assessment,
+                              onTap: () => context.push('/followups/report'),
+                            ),
+                          ],
+                          if (profile?.isSuperAdmin ?? false) ...[
+                            const SizedBox(height: 12),
+                            _buildActionButton(
+                              context,
+                              title: l10n.manageUsers,
+                              icon: Icons.admin_panel_settings,
+                              onTap: () => context.push('/users'),
+                            ),
+                            // const SizedBox(height: 12),
+                            // _buildActionButton(
+                            //   context,
+                            //   title: l10n.importData,
+                            //   icon: Icons.upload_file,
+                            //   onTap: () => context.push('/admin/import'),
+                            // ),
+                            const SizedBox(height: 12),
+                            _buildActionButton(
+                              context,
+                              title: l10n.otherZones ?? 'Other Zones',
+                              icon: Icons.map_outlined,
+                              onTap: () => context.push('/zones?other=true'),
+                            ),
+                          ],
+                        ],
+                      );
+                    },
                   ),
                 ],
               ),

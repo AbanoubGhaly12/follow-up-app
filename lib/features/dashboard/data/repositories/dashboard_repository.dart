@@ -20,35 +20,54 @@ class DashboardRepository {
 
   DashboardRepository(this._dbHelper);
 
-  Future<DashboardStats> getStats() async {
+  Future<DashboardStats> getStats({String? userId, bool isSuperAdmin = true}) async {
     final db = await _dbHelper.database;
 
-    final zonesCount =
-        Sqflite.firstIntValue(
-          await db.rawQuery('SELECT COUNT(*) FROM zones'),
-        ) ??
-        0;
-    final streetsCount =
-        Sqflite.firstIntValue(
-          await db.rawQuery('SELECT COUNT(*) FROM streets'),
-        ) ??
-        0;
-    final familiesCount =
-        Sqflite.firstIntValue(
-          await db.rawQuery('SELECT COUNT(*) FROM families'),
-        ) ??
-        0;
-    final membersCount =
-        Sqflite.firstIntValue(
-          await db.rawQuery('SELECT COUNT(*) FROM members'),
-        ) ??
-        0;
+    if (isSuperAdmin || userId == null) {
+      final zonesCount = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM zones')) ?? 0;
+      final streetsCount = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM streets')) ?? 0;
+      final familiesCount = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM families')) ?? 0;
+      final membersCount = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM members')) ?? 0;
 
-    return DashboardStats(
-      totalZones: zonesCount,
-      totalStreets: streetsCount,
-      totalFamilies: familiesCount,
-      totalMembers: membersCount,
-    );
+      return DashboardStats(
+        totalZones: zonesCount,
+        totalStreets: streetsCount,
+        totalFamilies: familiesCount,
+        totalMembers: membersCount,
+      );
+    } else {
+      // Filtered stats for Sub-Admins
+      final zoneIdsQuery = 'SELECT id FROM zones WHERE admin_uid = ? OR zone_admins LIKE ?';
+      final zoneArgs = [userId, '%"$userId"%'];
+
+      final zonesCount = Sqflite.firstIntValue(
+        await db.rawQuery('SELECT COUNT(*) FROM zones WHERE admin_uid = ? OR zone_admins LIKE ?', zoneArgs),
+      ) ?? 0;
+
+      final streetsCount = Sqflite.firstIntValue(
+        await db.rawQuery('SELECT COUNT(*) FROM streets WHERE zone_id IN ($zoneIdsQuery)', zoneArgs),
+      ) ?? 0;
+
+      final familiesCount = Sqflite.firstIntValue(
+        await db.rawQuery(
+          'SELECT COUNT(*) FROM families WHERE street_id IN (SELECT id FROM streets WHERE zone_id IN ($zoneIdsQuery))',
+          zoneArgs,
+        ),
+      ) ?? 0;
+
+      final membersCount = Sqflite.firstIntValue(
+        await db.rawQuery(
+          'SELECT COUNT(*) FROM members WHERE family_id IN (SELECT id FROM families WHERE street_id IN (SELECT id FROM streets WHERE zone_id IN ($zoneIdsQuery)))',
+          zoneArgs,
+        ),
+      ) ?? 0;
+
+      return DashboardStats(
+        totalZones: zonesCount,
+        totalStreets: streetsCount,
+        totalFamilies: familiesCount,
+        totalMembers: membersCount,
+      );
+    }
   }
 }

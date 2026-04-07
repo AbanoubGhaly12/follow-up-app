@@ -108,6 +108,43 @@ class FamilyModel extends Equatable {
     };
   }
 
+  Map<String, dynamic> toFirestore() {
+    return {
+      'street_id': streetId,
+      'family_head': familyHead,
+      'marriage_date': marriageDate?.toIso8601String(),
+      'landline': landline,
+      'street': addressInfo.street,
+      'building_number': addressInfo.buildingNumber,
+      'floor_number': addressInfo.floorNumber,
+      'flat_number': addressInfo.flatNumber,
+      'street_from': addressInfo.streetFrom,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
+    };
+  }
+
+  factory FamilyModel.fromFirestore(String id, Map<String, dynamic> map) {
+    return FamilyModel(
+      id: id,
+      streetId: map['street_id'] as String? ?? '',
+      familyHead: map['family_head'] as String? ?? '',
+      marriageDate: map['marriage_date'] != null
+          ? DateTime.parse(map['marriage_date'] as String)
+          : null,
+      landline: map['landline'] as String? ?? '',
+      addressInfo: AddressInfo(
+        street: map['street'] as String? ?? '',
+        buildingNumber: map['building_number'] as String? ?? '',
+        floorNumber: map['floor_number'] as String? ?? '',
+        flatNumber: map['flat_number'] as String? ?? '',
+        streetFrom: map['street_from'] as String? ?? '',
+      ),
+      createdAt: DateTime.parse(map['created_at'] as String),
+      updatedAt: DateTime.parse(map['updated_at'] as String),
+    );
+  }
+
   FamilyModel copyWith({
     String? id,
     String? streetId,

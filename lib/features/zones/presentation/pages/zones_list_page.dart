@@ -4,10 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../../../core/settings/settings_cubit.dart';
 import '../../../../core/widgets/detail_view_sheet.dart';
+import '../../../auth/presentation/cubit/auth_cubit.dart';
+import '../../../auth/presentation/cubit/auth_state.dart';
 import '../bloc/zone_bloc.dart';
 
 class ZonesListPage extends StatefulWidget {
-  const ZonesListPage({super.key});
+  final bool showOnlyOtherZones;
+  const ZonesListPage({super.key, this.showOnlyOtherZones = false});
 
   @override
   State<ZonesListPage> createState() => _ZonesListPageState();
@@ -19,7 +22,12 @@ class _ZonesListPageState extends State<ZonesListPage> {
   @override
   void initState() {
     super.initState();
-    context.read<ZoneBloc>().add(LoadZones());
+    final authState = context.read<AuthCubit>().state;
+    final isSuperAdmin = (authState is AuthAuthenticated) && (authState.profile?.isSuperAdmin ?? false);
+    context.read<ZoneBloc>().add(LoadZones(
+      isSuperAdmin: isSuperAdmin,
+      otherZonesOnly: widget.showOnlyOtherZones,
+    ));
   }
 
   @override
@@ -27,7 +35,7 @@ class _ZonesListPageState extends State<ZonesListPage> {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.zones),
+        title: Text(widget.showOnlyOtherZones ? (l10n.otherZones ?? 'Other Zones') : l10n.zones),
         actions: [
           IconButton(
             icon: const Icon(Icons.language),
@@ -114,22 +122,33 @@ class _ZonesListPageState extends State<ZonesListPage> {
                                     );
                                   },
                                 ),
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.edit,
-                                    color: Colors.blue,
-                                  ),
-                                  onPressed: () {
-                                    context.push('/zones/edit', extra: zone);
+                                BlocBuilder<AuthCubit, AuthState>(
+                                  builder: (context, authState) {
+                                    final isSuperAdmin = (authState is AuthAuthenticated) && (authState.profile?.isSuperAdmin ?? false);
+                                    if (!isSuperAdmin || widget.showOnlyOtherZones) return const SizedBox();
+                                    return IconButton(
+                                      icon: const Icon(
+                                        Icons.edit,
+                                        color: Colors.blue,
+                                      ),
+                                      onPressed: () {
+                                        context.push('/zones/edit', extra: zone);
+                                      },
+                                    );
                                   },
                                 ),
                               ],
                             ),
                             onTap: () {
-                              context.push('/zones/${zone.id}');
+                              context.push('/zones/${zone.id}?other=${widget.showOnlyOtherZones}');
                             },
                             onLongPress: () {
-                              context.push('/zones/edit', extra: zone);
+                              if (widget.showOnlyOtherZones) return;
+                              final authState = context.read<AuthCubit>().state;
+                              final isSuperAdmin = (authState is AuthAuthenticated) && (authState.profile?.isSuperAdmin ?? false);
+                              if (isSuperAdmin) {
+                                context.push('/zones/edit', extra: zone);
+                              }
                             },
                           ),
                         ),
@@ -145,11 +164,17 @@ class _ZonesListPageState extends State<ZonesListPage> {
           return Center(child: Text(l10n.initialState));
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          context.push('/zones/add');
+      floatingActionButton: BlocBuilder<AuthCubit, AuthState>(
+        builder: (context, authState) {
+          final isSuperAdmin = (authState is AuthAuthenticated) && (authState.profile?.isSuperAdmin ?? false);
+          if (!isSuperAdmin || widget.showOnlyOtherZones) return const SizedBox();
+          return FloatingActionButton(
+            onPressed: () {
+              context.push('/zones/add');
+            },
+            child: const Icon(Icons.add),
+          );
         },
-        child: const Icon(Icons.add),
       ),
     );
   }

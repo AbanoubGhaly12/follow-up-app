@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/widgets/detail_view_sheet.dart';
+import '../../../auth/presentation/cubit/auth_cubit.dart';
+import '../../../auth/presentation/cubit/auth_state.dart';
 import '../bloc/followup_bloc.dart';
 import '../bloc/followup_event.dart';
 import '../bloc/followup_state.dart';
@@ -12,11 +14,13 @@ import '../../data/models/followup_model.dart';
 class FollowupHistoryPage extends StatefulWidget {
   final String familyId;
   final String? familyName;
+  final bool isReadOnly;
 
   const FollowupHistoryPage({
     super.key,
     required this.familyId,
     this.familyName,
+    this.isReadOnly = false,
   });
 
   @override
@@ -207,39 +211,45 @@ class _FollowupHistoryPageState extends State<FollowupHistoryPage> {
                               );
                             },
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder:
-                                    (ctx) => AlertDialog(
-                                      title: Text(l10n.delete),
-                                      content: Text(l10n.confirmDeleteFollowup),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () => Navigator.pop(ctx),
-                                          child: Text(l10n.cancel),
-                                        ),
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.pop(ctx);
-                                            context.read<FollowupBloc>().add(
-                                              DeleteFollowup(
-                                                followup.id,
-                                                widget.familyId,
-                                              ),
-                                            );
-                                          },
-                                          child: Text(
-                                            l10n.delete,
-                                            style: const TextStyle(
-                                              color: Colors.red,
+                          BlocBuilder<AuthCubit, AuthState>(
+                            builder: (context, authState) {
+                              final isSuperAdmin = (authState is AuthAuthenticated) && (authState.profile?.isSuperAdmin ?? false);
+                              if (!isSuperAdmin || widget.isReadOnly) return const SizedBox();
+                              return IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.red),
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder:
+                                        (ctx) => AlertDialog(
+                                          title: Text(l10n.delete),
+                                          content: Text(l10n.confirmDeleteFollowup),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () => Navigator.pop(ctx),
+                                              child: Text(l10n.cancel),
                                             ),
-                                          ),
+                                            TextButton(
+                                              onPressed: () {
+                                                Navigator.pop(ctx);
+                                                context.read<FollowupBloc>().add(
+                                                  DeleteFollowup(
+                                                    followup.id,
+                                                    widget.familyId,
+                                                  ),
+                                                );
+                                              },
+                                              child: Text(
+                                                l10n.delete,
+                                                style: const TextStyle(
+                                                  color: Colors.red,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ],
-                                    ),
+                                  );
+                                },
                               );
                             },
                           ),
@@ -256,16 +266,22 @@ class _FollowupHistoryPageState extends State<FollowupHistoryPage> {
           return Center(child: Text(l10n.initialState));
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.add),
-        onPressed: () async {
-          final followupBloc = context.read<FollowupBloc>();
-          await context.push(
-            '/families/${widget.familyId}/followups/add?familyName=${Uri.encodeComponent(widget.familyName ?? '')}',
+      floatingActionButton: BlocBuilder<AuthCubit, AuthState>(
+        builder: (context, authState) {
+          final isSuperAdmin = (authState is AuthAuthenticated) && (authState.profile?.isSuperAdmin ?? false);
+          if (!isSuperAdmin || widget.isReadOnly) return const SizedBox();
+          return FloatingActionButton(
+            child: const Icon(Icons.add),
+            onPressed: () async {
+              final followupBloc = context.read<FollowupBloc>();
+              await context.push(
+                '/families/${widget.familyId}/followups/add?familyName=${Uri.encodeComponent(widget.familyName ?? '')}',
+              );
+              if (mounted) {
+                followupBloc.add(LoadFollowups(widget.familyId));
+              }
+            },
           );
-          if (mounted) {
-            followupBloc.add(LoadFollowups(widget.familyId));
-          }
         },
       ),
     );

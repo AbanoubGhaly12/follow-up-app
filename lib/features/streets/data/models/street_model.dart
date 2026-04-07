@@ -38,6 +38,25 @@ class StreetModel extends Equatable {
     };
   }
 
+  Map<String, dynamic> toFirestore() {
+    return {
+      'zone_id': zoneId,
+      'name': name,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
+    };
+  }
+
+  factory StreetModel.fromFirestore(String id, Map<String, dynamic> map) {
+    return StreetModel(
+      id: id,
+      zoneId: map['zone_id'] as String? ?? '',
+      name: map['name'] as String? ?? '',
+      createdAt: DateTime.parse(map['created_at'] as String),
+      updatedAt: DateTime.parse(map['updated_at'] as String),
+    );
+  }
+
   StreetModel copyWith({
     String? id,
     String? zoneId,

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../../../auth/presentation/cubit/auth_cubit.dart';
+import '../../../auth/presentation/cubit/auth_state.dart';
 import '../bloc/member_bloc.dart';
 import '../../../../core/widgets/detail_view_sheet.dart';
 import 'package:intl/intl.dart';
@@ -18,8 +20,14 @@ import '../../../streets/presentation/bloc/street_state.dart';
 class MembersListPage extends StatefulWidget {
   final String? familyId;
   final String? familyName;
+  final bool isReadOnly;
 
-  const MembersListPage({super.key, this.familyId, this.familyName});
+  const MembersListPage({
+    super.key,
+    this.familyId,
+    this.familyName,
+    this.isReadOnly = false,
+  });
 
   @override
   State<MembersListPage> createState() => _MembersListPageState();
@@ -430,15 +438,21 @@ class _MembersListPageState extends State<MembersListPage> {
                                           );
                                         },
                                       ),
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.edit_outlined,
-                                          color: Colors.blue,
-                                        ),
-                                        onPressed: () {
-                                          context.push(
-                                            '/families/${member.familyId}/members/edit',
-                                            extra: member,
+                                      BlocBuilder<AuthCubit, AuthState>(
+                                        builder: (context, authState) {
+                                          final isSuperAdmin = (authState is AuthAuthenticated) && (authState.profile?.isSuperAdmin ?? false);
+                                          if (!isSuperAdmin || widget.isReadOnly) return const SizedBox();
+                                          return IconButton(
+                                            icon: const Icon(
+                                              Icons.edit_outlined,
+                                              color: Colors.blue,
+                                            ),
+                                            onPressed: () {
+                                              context.push(
+                                                '/families/${member.familyId}/members/edit',
+                                                extra: member,
+                                              );
+                                            },
                                           );
                                         },
                                       ),
@@ -461,15 +475,18 @@ class _MembersListPageState extends State<MembersListPage> {
           return Center(child: Text(l10n.initialState));
         },
       ),
-      floatingActionButton:
-          widget.familyId != null
-              ? FloatingActionButton(
-                onPressed: () {
-                  context.push('/families/${widget.familyId}/members/add');
-                },
-                child: const Icon(Icons.add),
-              )
-              : null,
+      floatingActionButton: BlocBuilder<AuthCubit, AuthState>(
+        builder: (context, authState) {
+          final isSuperAdmin = (authState is AuthAuthenticated) && (authState.profile?.isSuperAdmin ?? false);
+          if (!isSuperAdmin || widget.familyId == null || widget.isReadOnly) return const SizedBox();
+          return FloatingActionButton(
+            onPressed: () {
+              context.push('/families/${widget.familyId}/members/add');
+            },
+            child: const Icon(Icons.add),
+          );
+        },
+      ),
     );
   }
 

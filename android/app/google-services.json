@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1098906626811",
+    "project_id": "follow-up-8c662",
+    "storage_bucket": "follow-up-8c662.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1098906626811:android:bac14e63a51cbc0b7c5e5e",
+        "android_client_info": {
+          "package_name": "com.example.followup_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyALirdbowjHhb7OQRWemKeXj8nE701LHRw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1098906626811:android:9b70d9bc305234df7c5e5e",
+        "android_client_info": {
+          "package_name": "com.stmarychurch.followup.follow_up"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyALirdbowjHhb7OQRWemKeXj8nE701LHRw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

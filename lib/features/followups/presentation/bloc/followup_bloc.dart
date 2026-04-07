@@ -16,7 +16,10 @@ class FollowupBloc extends Bloc<FollowupEvent, FollowupState> {
   Future<void> _onLoad(LoadFollowups event, Emitter<FollowupState> emit) async {
     emit(FollowupLoading());
     try {
-      final followups = await repository.getFollowupsByFamilyId(event.familyId);
+      final followups = await repository.getFollowupsByFamilyId(
+        event.familyId,
+        forceSync: event.forceSync,
+      );
       emit(FollowupLoaded(followups));
     } catch (e) {
       emit(FollowupError(e.toString()));
@@ -57,6 +60,7 @@ class FollowupBloc extends Bloc<FollowupEvent, FollowupState> {
         streetId: event.streetId,
         inactivityMonths: event.inactivityMonths,
         isFamilyReport: event.isFamilyReport,
+        forceSync: event.forceSync,
       );
       emit(FollowupLoaded(followups));
     } catch (e) {

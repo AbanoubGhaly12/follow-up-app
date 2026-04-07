@@ -6,11 +6,14 @@ import '../bloc/street_bloc.dart';
 import '../bloc/street_event.dart';
 import '../bloc/street_state.dart';
 import '../../../../core/widgets/detail_view_sheet.dart';
+import '../../../auth/presentation/cubit/auth_cubit.dart';
+import '../../../auth/presentation/cubit/auth_state.dart';
 
 class StreetsListPage extends StatefulWidget {
   final String? zoneId;
+  final bool isReadOnly;
 
-  const StreetsListPage({super.key, this.zoneId});
+  const StreetsListPage({super.key, this.zoneId, this.isReadOnly = false});
 
   @override
   State<StreetsListPage> createState() => _StreetsListPageState();
@@ -101,22 +104,32 @@ class _StreetsListPageState extends State<StreetsListPage> {
                                     );
                                   },
                                 ),
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.edit,
-                                    color: Colors.blue,
-                                  ),
-                                  onPressed: () {
-                                    context.push(
-                                      '/zones/${street.zoneId}/streets/edit',
-                                      extra: street,
+                                BlocBuilder<AuthCubit, AuthState>(
+                                  builder: (context, authState) {
+                                    final isSuperAdmin = (authState is AuthAuthenticated) && (authState.profile?.isSuperAdmin ?? false);
+                                    if (!isSuperAdmin || widget.isReadOnly) return const SizedBox();
+                                    return IconButton(
+                                      icon: const Icon(
+                                        Icons.edit,
+                                        color: Colors.blue,
+                                      ),
+                                      onPressed: () {
+                                        context.push(
+                                          '/zones/${street.zoneId}/streets/edit',
+                                          extra: street,
+                                        );
+                                      },
                                     );
                                   },
                                 ),
                               ],
                             ),
                             onTap: () {
-                              context.push('/streets/${street.id}');
+                              String path = '/streets/${street.id}';
+                              if (widget.isReadOnly) {
+                                path += '?other=true';
+                              }
+                              context.push(path);
                             },
                           ),
                         ),
@@ -132,15 +145,18 @@ class _StreetsListPageState extends State<StreetsListPage> {
           return Container();
         },
       ),
-      floatingActionButton:
-          widget.zoneId != null
-              ? FloatingActionButton(
-                child: const Icon(Icons.add),
-                onPressed: () {
-                  context.push('/zones/${widget.zoneId}/streets/add');
-                },
-              )
-              : null,
+      floatingActionButton: BlocBuilder<AuthCubit, AuthState>(
+        builder: (context, authState) {
+          final isSuperAdmin = (authState is AuthAuthenticated) && (authState.profile?.isSuperAdmin ?? false);
+          if (!isSuperAdmin || widget.zoneId == null || widget.isReadOnly) return const SizedBox();
+          return FloatingActionButton(
+            child: const Icon(Icons.add),
+            onPressed: () {
+              context.push('/zones/${widget.zoneId}/streets/add');
+            },
+          );
+        },
+      ),
     );
   }
 

@@ -1,4 +1,9 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
+import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/auth/presentation/pages/manage_users_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 
 import '../../features/zones/presentation/pages/zones_list_page.dart';
@@ -23,10 +28,65 @@ import '../../features/members/data/models/member_model.dart';
 import '../../features/followups/presentation/pages/followup_history_page.dart';
 import '../../features/followups/presentation/pages/followup_form_page.dart';
 import '../../features/followups/presentation/pages/followups_report_page.dart';
+import '../../features/admin/presentation/pages/import_data_page.dart';
+
+class GoRouterRefreshStream extends ChangeNotifier {
+  GoRouterRefreshStream(Stream<dynamic> stream) {
+    notifyListeners();
+    _subscription = stream.asBroadcastStream().listen(
+          (dynamic _) => notifyListeners(),
+        );
+  }
+
+  late final StreamSubscription<dynamic> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+}
 
 final appRouter = GoRouter(
   initialLocation: '/',
+  refreshListenable: GoRouterRefreshStream(FirebaseAuth.instance.authStateChanges()),
+  redirect: (context, state) {
+    final isLoggedIn = FirebaseAuth.instance.currentUser != null;
+    final isLoginRoute = state.matchedLocation == '/login';
+
+    if (!isLoggedIn && !isLoginRoute) {
+      return '/login';
+    }
+    if (isLoggedIn && isLoginRoute) {
+      return '/';
+    }
+    return null;
+  },
   routes: [
+    // Admin Routes
+    GoRoute(
+      path: '/admin/import',
+      builder: (context, state) => const ImportDataPage(),
+    ),
+
+    // Login Route
+    GoRoute(
+      path: '/login',
+      builder: (context, state) => const LoginPage(),
+    ),
+
+    // User Management
+    GoRoute(
+      path: '/users',
+      builder: (context, state) => const ManageUsersPage(),
+      routes: [
+        GoRoute(
+          path: 'add',
+          builder: (context, state) => const AddUserPage(),
+        ),
+      ],
+    ),
+
     // Dashboard Route
     GoRoute(path: '/', builder: (context, state) => const DashboardPage()),
 
@@ -65,7 +125,10 @@ final appRouter = GoRouter(
     // Hierarchy Routes
     GoRoute(
       path: '/zones',
-      builder: (context, state) => const ZonesListPage(),
+      builder: (context, state) {
+        final other = state.uri.queryParameters['other'] == 'true';
+        return ZonesListPage(showOnlyOtherZones: other);
+      },
       routes: [
         GoRoute(path: 'add', builder: (context, state) => const ZoneFormPage()),
         GoRoute(
@@ -79,7 +142,8 @@ final appRouter = GoRouter(
           path: ':zid',
           builder: (context, state) {
             final zid = state.pathParameters['zid']!;
-            return StreetsListPage(zoneId: zid);
+            final other = state.uri.queryParameters['other'] == 'true';
+            return StreetsListPage(zoneId: zid, isReadOnly: other);
           },
           routes: [
             GoRoute(
@@ -106,7 +170,8 @@ final appRouter = GoRouter(
       path: '/streets/:sid',
       builder: (context, state) {
         final sid = state.pathParameters['sid']!;
-        return FamiliesListPage(streetId: sid);
+        final other = state.uri.queryParameters['other'] == 'true';
+        return FamiliesListPage(streetId: sid, isReadOnly: other);
       },
       routes: [
         GoRoute(
@@ -132,7 +197,12 @@ final appRouter = GoRouter(
       builder: (context, state) {
         final fid = state.pathParameters['fid']!;
         final familyName = state.uri.queryParameters['familyName'];
-        return MembersListPage(familyId: fid, familyName: familyName);
+        final other = state.uri.queryParameters['other'] == 'true';
+        return MembersListPage(
+          familyId: fid,
+          familyName: familyName,
+          isReadOnly: other,
+        );
       },
       routes: [
         GoRoute(
@@ -155,7 +225,12 @@ final appRouter = GoRouter(
           builder: (context, state) {
             final fid = state.pathParameters['fid']!;
             final familyName = state.uri.queryParameters['familyName'];
-            return FollowupHistoryPage(familyId: fid, familyName: familyName);
+            final other = state.uri.queryParameters['other'] == 'true';
+            return FollowupHistoryPage(
+              familyId: fid,
+              familyName: familyName,
+              isReadOnly: other,
+            );
           },
         ),
         GoRoute(

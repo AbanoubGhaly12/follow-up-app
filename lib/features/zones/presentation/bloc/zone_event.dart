@@ -7,7 +7,15 @@ abstract class ZoneEvent extends Equatable {
   List<Object> get props => [];
 }
 
-class LoadZones extends ZoneEvent {}
+class LoadZones extends ZoneEvent {
+  final bool isSuperAdmin;
+  final bool otherZonesOnly;
+
+  const LoadZones({this.isSuperAdmin = false, this.otherZonesOnly = false});
+
+  @override
+  List<Object> get props => [isSuperAdmin, otherZonesOnly];
+}
 
 class AddZone extends ZoneEvent {
   final ZoneModel zone;

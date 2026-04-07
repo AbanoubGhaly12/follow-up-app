@@ -3,6 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../../../auth/presentation/cubit/user_cubit.dart';
+import '../../../auth/presentation/cubit/auth_cubit.dart';
+import '../../../auth/presentation/cubit/auth_state.dart';
 import '../../data/models/zone_model.dart';
 import '../bloc/zone_bloc.dart';
 
@@ -20,7 +23,7 @@ class _ZoneFormPageState extends State<ZoneFormPage> {
   late TextEditingController _nameController;
   late TextEditingController _tagController;
   late TextEditingController _descriptionController;
-  late TextEditingController _adminsController;
+  List<String> _selectedAdminUids = [];
 
   @override
   void initState() {
@@ -30,9 +33,7 @@ class _ZoneFormPageState extends State<ZoneFormPage> {
     _descriptionController = TextEditingController(
       text: widget.zone?.description ?? '',
     );
-    _adminsController = TextEditingController(
-      text: widget.zone?.zoneAdmins.join(',') ?? '',
-    );
+    _selectedAdminUids = List<String>.from(widget.zone?.zoneAdmins ?? []);
   }
 
   @override
@@ -40,19 +41,12 @@ class _ZoneFormPageState extends State<ZoneFormPage> {
     _nameController.dispose();
     _tagController.dispose();
     _descriptionController.dispose();
-    _adminsController.dispose();
     super.dispose();
   }
 
   void _saveZone() {
     if (_formKey.currentState!.validate()) {
       final now = DateTime.now();
-      final admins =
-          _adminsController.text
-              .split(',')
-              .map((e) => e.trim())
-              .where((e) => e.isNotEmpty)
-              .toList();
 
       if (widget.zone == null) {
         // Add
@@ -61,7 +55,7 @@ class _ZoneFormPageState extends State<ZoneFormPage> {
           name: _nameController.text,
           tag: _tagController.text,
           description: _descriptionController.text,
-          zoneAdmins: admins,
+          zoneAdmins: _selectedAdminUids,
           createdAt: now,
           updatedAt: now,
         );
@@ -72,7 +66,7 @@ class _ZoneFormPageState extends State<ZoneFormPage> {
           name: _nameController.text,
           tag: _tagController.text,
           description: _descriptionController.text,
-          zoneAdmins: admins,
+          zoneAdmins: _selectedAdminUids,
           updatedAt: now,
         );
         context.read<ZoneBloc>().add(UpdateZone(updatedZone));
@@ -118,15 +112,49 @@ class _ZoneFormPageState extends State<ZoneFormPage> {
                 controller: _descriptionController,
                 decoration: InputDecoration(labelText: l10n.description),
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _adminsController,
-                decoration: InputDecoration(labelText: l10n.admins),
-                validator:
-                    (value) =>
-                        value == null || value.isEmpty
-                            ? l10n.requiredField
-                            : null,
+              const SizedBox(height: 24),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  l10n.admins,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              const SizedBox(height: 8),
+              BlocBuilder<UserCubit, UserState>(
+                builder: (context, state) {
+                  if (state is UserLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (state is UsersLoaded) {
+                    if (state.users.isEmpty) {
+                      return Text(
+                        "No sub-admins found. Please add users first.",
+                        style: TextStyle(color: Colors.grey.shade600),
+                      );
+                    }
+                    return Wrap(
+                      spacing: 8,
+                      children: state.users.map((user) {
+                        final isSelected = _selectedAdminUids.contains(user.uid);
+                        return FilterChip(
+                          label: Text(user.name),
+                          selected: isSelected,
+                          onSelected: (selected) {
+                            setState(() {
+                              if (selected) {
+                                _selectedAdminUids.add(user.uid);
+                              } else {
+                                _selectedAdminUids.remove(user.uid);
+                              }
+                            });
+                          },
+                        );
+                      }).toList(),
+                    );
+                  }
+                  return const SizedBox();
+                },
               ),
               const SizedBox(height: 20),
               SizedBox(
@@ -136,51 +164,60 @@ class _ZoneFormPageState extends State<ZoneFormPage> {
                   child: Text(l10n.saveZone),
                 ),
               ),
-              if (widget.zone != null) ...[
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    label: Text(
-                      l10n.delete,
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.red),
-                    ),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder:
-                            (ctx) => AlertDialog(
-                              title: Text(l10n.delete),
-                              content: Text(l10n.confirmDeleteZone),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(ctx),
-                                  child: Text(l10n.cancel),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.pop(ctx);
-                                    context.read<ZoneBloc>().add(
-                                      DeleteZone(widget.zone!.id),
-                                    );
-                                    context.pop();
-                                  },
-                                  child: Text(
-                                    l10n.delete,
-                                    style: const TextStyle(color: Colors.red),
+              BlocBuilder<AuthCubit, AuthState>(
+                builder: (context, authState) {
+                  final isSuperAdmin = (authState is AuthAuthenticated) &&
+                      (authState.profile?.isSuperAdmin ?? false);
+                  if (widget.zone != null && isSuperAdmin) {
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 12.0),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          label: Text(
+                            l10n.delete,
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Colors.red),
+                          ),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder:
+                                  (ctx) => AlertDialog(
+                                    title: Text(l10n.delete),
+                                    content: Text(l10n.confirmDeleteZone),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(ctx),
+                                        child: Text(l10n.cancel),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.pop(ctx);
+                                          context.read<ZoneBloc>().add(
+                                            DeleteZone(widget.zone!.id),
+                                          );
+                                          context.pop();
+                                        },
+                                        child: Text(
+                                          l10n.delete,
+                                          style: const TextStyle(color: Colors.red),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ],
-                            ),
-                      );
-                    },
-                  ),
-                ),
-              ],
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  }
+                  return const SizedBox();
+                },
+              ),
             ],
           ),
         ),

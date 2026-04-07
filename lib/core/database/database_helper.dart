@@ -21,7 +21,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 8,
+      version: 11,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -74,6 +74,32 @@ class DatabaseHelper {
       await db.execute('ALTER TABLE followups ADD COLUMN member_id TEXT');
       await db.execute('ALTER TABLE followups ADD COLUMN member_name TEXT');
     }
+    if (oldVersion < 9) {
+      // Zone Admin Support
+      try {
+        await db.execute('ALTER TABLE zones ADD COLUMN admin_uid TEXT');
+      } catch (e) {
+        // Already exists
+      }
+      
+      // Users Table
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+          uid TEXT PRIMARY KEY,
+          name TEXT,
+          email TEXT,
+          parent_admin_uid TEXT,
+          role TEXT,
+          created_at TEXT
+        )
+      ''');
+    }
+    if (oldVersion < 10) {
+      await db.execute('ALTER TABLE users ADD COLUMN managed_zone_ids TEXT');
+    }
+    if (oldVersion < 11) {
+      await db.execute('ALTER TABLE followups ADD COLUMN user_uid TEXT');
+    }
   }
 
   Future<void> _createDB(Database db, int version) async {
@@ -85,8 +111,22 @@ class DatabaseHelper {
         tag TEXT,
         description TEXT,
         zone_admins TEXT,
+        admin_uid TEXT,
         created_at TEXT,
         updated_at TEXT
+      )
+    ''');
+
+    // Users Table
+    await db.execute('''
+      CREATE TABLE users (
+        uid TEXT PRIMARY KEY,
+        name TEXT,
+        email TEXT,
+        parent_admin_uid TEXT,
+        role TEXT,
+        managed_zone_ids TEXT,
+        created_at TEXT
       )
     ''');
 
@@ -170,6 +210,7 @@ class DatabaseHelper {
         followup_date TEXT,
         notes TEXT,
         type TEXT,
+        user_uid TEXT,
         created_at TEXT,
         updated_at TEXT,
         FOREIGN KEY (family_id) REFERENCES families (id) ON DELETE CASCADE,

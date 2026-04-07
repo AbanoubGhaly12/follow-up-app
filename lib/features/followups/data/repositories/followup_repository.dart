@@ -1,20 +1,54 @@
 import '../../../../core/database/database_helper.dart';
+import '../../../../core/sync/firestore_sync_service.dart';
 import '../models/followup_model.dart';
 import 'package:sqflite/sqflite.dart';
 
 class FollowupRepository {
   final DatabaseHelper _dbHelper;
+  final FirestoreSyncService _syncService;
 
-  FollowupRepository(this._dbHelper);
+  FollowupRepository(this._dbHelper, this._syncService);
 
-  Future<List<FollowupModel>> getFollowupsByFamilyId(String familyId) async {
+  Future<void> _syncFollowups() async {
     final db = await _dbHelper.database;
+    final remoteFollowups = await _syncService.fetchFollowups();
+    if (remoteFollowups.isNotEmpty) {
+      for (var followupData in remoteFollowups) {
+        await db.insert(
+          'followups',
+          followupData,
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    }
+  }
+
+  Future<List<FollowupModel>> getFollowupsByFamilyId(String familyId, {bool forceSync = false}) async {
+    final db = await _dbHelper.database;
+    
+    if (forceSync) {
+      await _syncFollowups();
+    }
+    
     final List<Map<String, dynamic>> maps = await db.query(
       'followups',
       where: 'family_id = ?',
       whereArgs: [familyId],
       orderBy: 'followup_date DESC',
     );
+
+    if (maps.isEmpty && !forceSync) {
+      await _syncFollowups();
+      // Re-query after sync
+      final syncMaps = await db.query(
+        'followups',
+        where: 'family_id = ?',
+        whereArgs: [familyId],
+        orderBy: 'followup_date DESC',
+      );
+      return syncMaps.map((f) => FollowupModel.fromMap(f)).toList();
+    }
+
     return List.generate(maps.length, (i) => FollowupModel.fromMap(maps[i]));
   }
 
@@ -25,11 +59,13 @@ class FollowupRepository {
       followup.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+    await _syncService.pushFollowup(followup.toMap());
   }
 
   Future<void> deleteFollowup(String id) async {
     final db = await _dbHelper.database;
     await db.delete('followups', where: 'id = ?', whereArgs: [id]);
+    await _syncService.deleteFollowupRemote(id);
   }
 
   Future<List<FollowupModel>> getFollowupsReport({
@@ -39,8 +75,14 @@ class FollowupRepository {
     String? streetId,
     int? inactivityMonths,
     bool? isFamilyReport,
+    bool forceSync = false,
   }) async {
     final db = await _dbHelper.database;
+    
+    if (forceSync) {
+      await _syncFollowups();
+    }
+    
     String whereClause = '';
     List<dynamic> whereArgs = [];
 
@@ -77,21 +119,20 @@ class FollowupRepository {
           query,
           whereArgs,
         );
+        
+        if (maps.isEmpty && !forceSync) {
+           await _syncFollowups();
+           // Re-query after sync
+           final refreshedMaps = await db.rawQuery(query, whereArgs);
+           return List.generate(refreshedMaps.length, (i) {
+             final lastDateStr = refreshedMaps[i]['last_date'] as String?;
+             return _buildNeglectModel(refreshedMaps[i], lastDateStr);
+           });
+        }
+        
         return List.generate(maps.length, (i) {
           final lastDateStr = maps[i]['last_date'] as String?;
-          return FollowupModel(
-            id: 'neglect_fam_${maps[i]['family_id']}',
-            familyId: maps[i]['family_id'] as String,
-            familyName: maps[i]['family_name'] as String,
-            type: FollowupType.other,
-            followupDate:
-                lastDateStr != null
-                    ? DateTime.parse(lastDateStr)
-                    : DateTime(2000),
-            notes: lastDateStr ?? 'NEVER',
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-          );
+          return _buildNeglectModel(maps[i], lastDateStr);
         });
       } else {
         // Member-level neglect
@@ -119,23 +160,20 @@ class FollowupRepository {
           query,
           whereArgs,
         );
+        
+        if (maps.isEmpty && !forceSync) {
+           await _syncFollowups();
+           // Re-query after sync
+           final refreshedMaps = await db.rawQuery(query, whereArgs);
+           return List.generate(refreshedMaps.length, (i) {
+             final lastDateStr = refreshedMaps[i]['last_date'] as String?;
+             return _buildNeglectModel(refreshedMaps[i], lastDateStr);
+           });
+        }
+        
         return List.generate(maps.length, (i) {
           final lastDateStr = maps[i]['last_date'] as String?;
-          return FollowupModel(
-            id: 'neglect_mem_${maps[i]['member_id']}',
-            familyId: maps[i]['family_id'] as String,
-            familyName: maps[i]['family_name'] as String,
-            memberId: maps[i]['member_id'] as String,
-            memberName: maps[i]['member_name'] as String,
-            type: FollowupType.other,
-            followupDate:
-                lastDateStr != null
-                    ? DateTime.parse(lastDateStr)
-                    : DateTime(2000),
-            notes: lastDateStr ?? 'NEVER',
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-          );
+          return _buildNeglectModel(maps[i], lastDateStr);
         });
       }
     }
@@ -179,6 +217,33 @@ class FollowupRepository {
     ''';
 
     final List<Map<String, dynamic>> maps = await db.rawQuery(query, whereArgs);
+
+    if (maps.isEmpty && inactivityMonths == null && !forceSync) {
+      await _syncFollowups();
+      // Re-run the local query after sync to return filtered result
+      final updatedMaps = await db.rawQuery(query, whereArgs);
+      return List.generate(
+        updatedMaps.length,
+        (i) => FollowupModel.fromMap(updatedMaps[i]),
+      );
+    }
+
     return List.generate(maps.length, (i) => FollowupModel.fromMap(maps[i]));
+  }
+
+  FollowupModel _buildNeglectModel(Map<String, dynamic> map, String? lastDateStr) {
+    final bool isMember = map.containsKey('member_id');
+    return FollowupModel(
+      id: isMember ? 'neglect_mem_${map['member_id']}' : 'neglect_fam_${map['family_id']}',
+      familyId: map['family_id'] as String,
+      familyName: map['family_name'] as String,
+      memberId: isMember ? map['member_id'] as String : null,
+      memberName: isMember ? map['member_name'] as String : null,
+      type: FollowupType.other,
+      followupDate: lastDateStr != null ? DateTime.parse(lastDateStr) : DateTime(2000),
+      notes: lastDateStr ?? 'NEVER',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
   }
 }

@@ -11,6 +11,7 @@ class FollowupModel extends Equatable {
   final DateTime followupDate;
   final String notes;
   final FollowupType type;
+  final String? userUid;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -23,6 +24,7 @@ class FollowupModel extends Equatable {
     required this.followupDate,
     required this.notes,
     required this.type,
+    this.userUid,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -37,6 +39,7 @@ class FollowupModel extends Equatable {
     followupDate,
     notes,
     type,
+    userUid,
     createdAt,
     updatedAt,
   ];
@@ -54,6 +57,7 @@ class FollowupModel extends Equatable {
         (e) => e.toString().split('.').last == map['type'],
         orElse: () => FollowupType.other,
       ),
+      userUid: map['user_uid'] as String?,
       createdAt: DateTime.parse(map['created_at'] as String),
       updatedAt: DateTime.parse(map['updated_at'] as String),
     );
@@ -69,9 +73,44 @@ class FollowupModel extends Equatable {
       'followup_date': followupDate.toIso8601String(),
       'notes': notes,
       'type': type.toString().split('.').last,
+      'user_uid': userUid,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
+  }
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      'family_id': familyId,
+      'family_name': familyName,
+      'member_id': memberId,
+      'member_name': memberName,
+      'followup_date': followupDate.toIso8601String(),
+      'notes': notes,
+      'type': type.toString().split('.').last,
+      'user_uid': userUid,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
+    };
+  }
+
+  factory FollowupModel.fromFirestore(String id, Map<String, dynamic> map) {
+    return FollowupModel(
+      id: id,
+      familyId: map['family_id'] as String? ?? '',
+      familyName: map['family_name'] as String?,
+      memberId: map['member_id'] as String?,
+      memberName: map['member_name'] as String?,
+      followupDate: DateTime.parse(map['followup_date'] as String),
+      notes: map['notes'] as String? ?? '',
+      type: FollowupType.values.firstWhere(
+        (e) => e.toString().split('.').last == map['type'],
+        orElse: () => FollowupType.other,
+      ),
+      userUid: map['user_uid'] as String?,
+      createdAt: DateTime.parse(map['created_at'] as String),
+      updatedAt: DateTime.parse(map['updated_at'] as String),
+    );
   }
 
   FollowupModel copyWith({
@@ -83,6 +122,7 @@ class FollowupModel extends Equatable {
     DateTime? followupDate,
     String? notes,
     FollowupType? type,
+    String? userUid,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -95,6 +135,7 @@ class FollowupModel extends Equatable {
       followupDate: followupDate ?? this.followupDate,
       notes: notes ?? this.notes,
       type: type ?? this.type,
+      userUid: userUid ?? this.userUid,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

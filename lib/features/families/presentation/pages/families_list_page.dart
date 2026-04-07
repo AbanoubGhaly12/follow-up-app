@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../../../auth/presentation/cubit/auth_cubit.dart';
+import '../../../auth/presentation/cubit/auth_state.dart';
 import '../bloc/family_bloc.dart';
 import '../../../../core/widgets/detail_view_sheet.dart';
 import 'package:intl/intl.dart';
 
 class FamiliesListPage extends StatefulWidget {
   final String? streetId;
+  final bool isReadOnly;
 
-  const FamiliesListPage({super.key, this.streetId});
+  const FamiliesListPage({super.key, this.streetId, this.isReadOnly = false});
 
   @override
   State<FamiliesListPage> createState() => _FamiliesListPageState();
@@ -86,9 +89,11 @@ class _FamiliesListPageState extends State<FamiliesListPage> {
                           ),
                           child: InkWell(
                             onTap: () {
-                              context.push(
-                                '/families/${family.id}?familyName=${Uri.encodeComponent(family.familyHead)}',
-                              );
+                              String path = '/families/${family.id}?familyName=${Uri.encodeComponent(family.familyHead)}';
+                              if (widget.isReadOnly) {
+                                path += '&other=true';
+                              }
+                              context.push(path);
                             },
                             borderRadius: BorderRadius.circular(12),
                             child: Padding(
@@ -175,9 +180,11 @@ class _FamiliesListPageState extends State<FamiliesListPage> {
                                     children: [
                                       TextButton.icon(
                                         onPressed: () {
-                                          context.push(
-                                            '/families/${family.id}/followups?familyName=${Uri.encodeComponent(family.familyHead)}',
-                                          );
+                                          String path = '/families/${family.id}/followups?familyName=${Uri.encodeComponent(family.familyHead)}';
+                                          if (widget.isReadOnly) {
+                                            path += '&other=true';
+                                          }
+                                          context.push(path);
                                         },
                                         icon: Icon(
                                           Icons.history,
@@ -262,15 +269,21 @@ class _FamiliesListPageState extends State<FamiliesListPage> {
                                           );
                                         },
                                       ),
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.edit_outlined,
-                                          color: Colors.blue,
-                                        ),
-                                        onPressed: () {
-                                          context.push(
-                                            '/streets/${family.streetId}/families/edit',
-                                            extra: family,
+                                      BlocBuilder<AuthCubit, AuthState>(
+                                        builder: (context, authState) {
+                                          final isSuperAdmin = (authState is AuthAuthenticated) && (authState.profile?.isSuperAdmin ?? false);
+                                          if (!isSuperAdmin || widget.isReadOnly) return const SizedBox();
+                                          return IconButton(
+                                            icon: const Icon(
+                                              Icons.edit_outlined,
+                                              color: Colors.blue,
+                                            ),
+                                            onPressed: () {
+                                              context.push(
+                                                '/streets/${family.streetId}/families/edit',
+                                                extra: family,
+                                              );
+                                            },
                                           );
                                         },
                                       ),
@@ -293,15 +306,18 @@ class _FamiliesListPageState extends State<FamiliesListPage> {
           return Center(child: Text(l10n.initialState));
         },
       ),
-      floatingActionButton:
-          widget.streetId != null
-              ? FloatingActionButton(
-                onPressed: () {
-                  context.push('/streets/${widget.streetId}/families/add');
-                },
-                child: const Icon(Icons.add),
-              )
-              : null,
+      floatingActionButton: BlocBuilder<AuthCubit, AuthState>(
+        builder: (context, authState) {
+          final isSuperAdmin = (authState is AuthAuthenticated) && (authState.profile?.isSuperAdmin ?? false);
+          if (!isSuperAdmin || widget.streetId == null || widget.isReadOnly) return const SizedBox();
+          return FloatingActionButton(
+            onPressed: () {
+              context.push('/streets/${widget.streetId}/families/add');
+            },
+            child: const Icon(Icons.add),
+          );
+        },
+      ),
     );
   }
 

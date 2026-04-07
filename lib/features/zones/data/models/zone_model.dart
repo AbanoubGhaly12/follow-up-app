@@ -7,6 +7,7 @@ class ZoneModel extends Equatable {
   final String tag;
   final String? description;
   final List<String> zoneAdmins;
+  final String? adminUid;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -16,6 +17,7 @@ class ZoneModel extends Equatable {
     required this.tag,
     this.description,
     required this.zoneAdmins,
+    this.adminUid,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -27,6 +29,7 @@ class ZoneModel extends Equatable {
     tag,
     description,
     zoneAdmins,
+    adminUid,
     createdAt,
     updatedAt,
   ];
@@ -41,6 +44,7 @@ class ZoneModel extends Equatable {
           (jsonDecode(map['zone_admins'] as String) as List<dynamic>)
               .map((e) => e as String)
               .toList(),
+      adminUid: map['admin_uid'] as String?,
       createdAt: DateTime.parse(map['created_at'] as String),
       updatedAt: DateTime.parse(map['updated_at'] as String),
     );
@@ -53,9 +57,35 @@ class ZoneModel extends Equatable {
       'tag': tag,
       'description': description,
       'zone_admins': jsonEncode(zoneAdmins),
+      'admin_uid': adminUid,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
+  }
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      'name': name,
+      'tag': tag,
+      'description': description,
+      'zone_admins': zoneAdmins,
+      'admin_uid': adminUid,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
+    };
+  }
+
+  factory ZoneModel.fromFirestore(String id, Map<String, dynamic> map) {
+    return ZoneModel(
+      id: id,
+      name: map['name'] as String? ?? '',
+      tag: map['tag'] as String? ?? '',
+      description: map['description'] as String?,
+      zoneAdmins: List<String>.from(map['zone_admins'] as List? ?? []),
+      adminUid: map['admin_uid'] as String?,
+      createdAt: DateTime.parse(map['created_at'] as String),
+      updatedAt: DateTime.parse(map['updated_at'] as String),
+    );
   }
 
   ZoneModel copyWith({
@@ -64,6 +94,7 @@ class ZoneModel extends Equatable {
     String? tag,
     String? description,
     List<String>? zoneAdmins,
+    String? adminUid,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -73,6 +104,7 @@ class ZoneModel extends Equatable {
       tag: tag ?? this.tag,
       description: description ?? this.description,
       zoneAdmins: zoneAdmins ?? this.zoneAdmins,
+      adminUid: adminUid ?? this.adminUid,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

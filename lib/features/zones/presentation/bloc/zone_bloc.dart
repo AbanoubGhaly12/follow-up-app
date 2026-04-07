@@ -8,6 +8,8 @@ part 'zone_state.dart';
 
 class ZoneBloc extends Bloc<ZoneEvent, ZoneState> {
   final ZoneRepository _zoneRepository;
+  bool _isSuperAdmin = false;
+  bool _otherZonesOnly = false;
 
   ZoneBloc(this._zoneRepository) : super(ZoneInitial()) {
     on<LoadZones>(_onLoadZones);
@@ -18,8 +20,13 @@ class ZoneBloc extends Bloc<ZoneEvent, ZoneState> {
 
   Future<void> _onLoadZones(LoadZones event, Emitter<ZoneState> emit) async {
     emit(ZoneLoading());
+    _isSuperAdmin = event.isSuperAdmin;
+    _otherZonesOnly = event.otherZonesOnly;
     try {
-      final zones = await _zoneRepository.getZones();
+      final zones = await _zoneRepository.getZones(
+        isSuperAdmin: _isSuperAdmin,
+        otherZonesOnly: _otherZonesOnly,
+      );
       emit(ZoneLoaded(zones));
     } catch (e) {
       emit(ZoneError(e.toString()));
@@ -29,7 +36,7 @@ class ZoneBloc extends Bloc<ZoneEvent, ZoneState> {
   Future<void> _onAddZone(AddZone event, Emitter<ZoneState> emit) async {
     try {
       await _zoneRepository.addZone(event.zone);
-      add(LoadZones());
+      add(LoadZones(isSuperAdmin: _isSuperAdmin, otherZonesOnly: _otherZonesOnly));
     } catch (e) {
       emit(ZoneError(e.toString()));
     }
@@ -38,7 +45,7 @@ class ZoneBloc extends Bloc<ZoneEvent, ZoneState> {
   Future<void> _onUpdateZone(UpdateZone event, Emitter<ZoneState> emit) async {
     try {
       await _zoneRepository.updateZone(event.zone);
-      add(LoadZones());
+      add(LoadZones(isSuperAdmin: _isSuperAdmin, otherZonesOnly: _otherZonesOnly));
     } catch (e) {
       emit(ZoneError(e.toString()));
     }
@@ -47,7 +54,7 @@ class ZoneBloc extends Bloc<ZoneEvent, ZoneState> {
   Future<void> _onDeleteZone(DeleteZone event, Emitter<ZoneState> emit) async {
     try {
       await _zoneRepository.deleteZone(event.id);
-      add(LoadZones());
+      add(LoadZones(isSuperAdmin: _isSuperAdmin, otherZonesOnly: _otherZonesOnly));
     } catch (e) {
       emit(ZoneError(e.toString()));
     }

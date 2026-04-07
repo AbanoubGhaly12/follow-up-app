@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../../../auth/presentation/cubit/auth_state.dart';
+import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../data/models/family_model.dart';
 import '../bloc/family_bloc.dart';
 
@@ -200,54 +202,61 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
                 onPressed: _saveFamily,
                 child: Text(l10n.saveFamily),
               ),
-              if (widget.family != null) ...[
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    label: Text(
-                      l10n.delete,
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.red),
-                    ),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder:
-                            (ctx) => AlertDialog(
-                              title: Text(l10n.delete),
-                              content: Text(l10n.confirmDeleteFamily),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(ctx),
-                                  child: Text(l10n.cancel),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.pop(ctx);
-                                    context.read<FamilyBloc>().add(
-                                      DeleteFamily(
-                                        widget.family!.id,
-                                        widget.streetId,
-                                      ),
-                                    );
-                                    context.pop();
-                                  },
-                                  child: Text(
-                                    l10n.delete,
-                                    style: const TextStyle(color: Colors.red),
+              BlocBuilder<AuthCubit, AuthState>(
+                builder: (context, authState) {
+                  final isSuperAdmin = (authState is AuthAuthenticated) && (authState.profile?.isSuperAdmin ?? false);
+                  if (widget.family != null && isSuperAdmin) {
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 12.0),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          label: Text(
+                            l10n.delete,
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Colors.red),
+                          ),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: Text(l10n.delete),
+                                content: Text(l10n.confirmDeleteFamily),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx),
+                                    child: Text(l10n.cancel),
                                   ),
-                                ),
-                              ],
-                            ),
-                      );
-                    },
-                  ),
-                ),
-              ],
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(ctx);
+                                      context.read<FamilyBloc>().add(
+                                        DeleteFamily(
+                                          widget.family!.id,
+                                          widget.streetId,
+                                        ),
+                                      );
+                                      context.pop();
+                                    },
+                                    child: Text(
+                                      l10n.delete,
+                                      style: const TextStyle(color: Colors.red),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  }
+                  return const SizedBox();
+                },
+              ),
             ],
           ),
         ),

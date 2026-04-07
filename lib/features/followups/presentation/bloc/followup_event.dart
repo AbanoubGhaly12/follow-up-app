@@ -10,10 +10,11 @@ abstract class FollowupEvent extends Equatable {
 
 class LoadFollowups extends FollowupEvent {
   final String familyId;
-  const LoadFollowups(this.familyId);
+  final bool forceSync;
+  const LoadFollowups(this.familyId, {this.forceSync = false});
 
   @override
-  List<Object?> get props => [familyId];
+  List<Object?> get props => [familyId, forceSync];
 }
 
 class AddFollowup extends FollowupEvent {
@@ -41,6 +42,7 @@ class SearchFollowups extends FollowupEvent {
   final String? streetId;
   final int? inactivityMonths;
   final bool? isFamilyReport;
+  final bool forceSync;
 
   const SearchFollowups({
     this.date,
@@ -49,6 +51,7 @@ class SearchFollowups extends FollowupEvent {
     this.streetId,
     this.inactivityMonths,
     this.isFamilyReport,
+    this.forceSync = false,
   });
 
   @override
@@ -59,5 +62,6 @@ class SearchFollowups extends FollowupEvent {
     streetId,
     inactivityMonths,
     isFamilyReport,
+    forceSync,
   ];
 }

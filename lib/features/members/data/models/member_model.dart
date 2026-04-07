@@ -145,6 +145,64 @@ class MemberModel extends Equatable {
     };
   }
 
+  Map<String, dynamic> toFirestore() {
+    return {
+      'family_id': familyId,
+      'name': name,
+      'birthdate': birthdate.toIso8601String(),
+      'mobile_number': mobileNumber,
+      'email': email,
+      'confession_father': confessionFather,
+      'confession_father_church_name': confessionFatherChurchName,
+      'national_id': nationalId,
+      'belong_to_church_name': belongToChurchName,
+      'is_dead': isDead,
+      'death_date': deathDate?.toIso8601String(),
+      'marital_status': maritalStatus.toString().split('.').last,
+      'college_year': collegeYear.toString().split('.').last,
+      'profession': profession,
+      'weekly_off_days': weeklyOffDays,
+      'role': role.toString().split('.').last,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
+    };
+  }
+
+  factory MemberModel.fromFirestore(String id, Map<String, dynamic> map) {
+    return MemberModel(
+      id: id,
+      familyId: map['family_id'] as String? ?? '',
+      name: map['name'] as String? ?? '',
+      birthdate: DateTime.parse(map['birthdate'] as String),
+      mobileNumber: map['mobile_number'] as String? ?? '',
+      email: map['email'] as String? ?? '',
+      confessionFather: map['confession_father'] as String? ?? '',
+      confessionFatherChurchName: map['confession_father_church_name'] as String? ?? '',
+      nationalId: map['national_id'] as String? ?? '',
+      belongToChurchName: map['belong_to_church_name'] as String? ?? '',
+      isDead: map['is_dead'] == true || map['is_dead'] == 1,
+      deathDate: map['death_date'] != null
+          ? DateTime.parse(map['death_date'] as String)
+          : null,
+      maritalStatus: MaritalStatus.values.firstWhere(
+        (e) => e.toString().split('.').last == map['marital_status'],
+        orElse: () => MaritalStatus.single,
+      ),
+      collegeYear: CollegeYear.values.firstWhere(
+        (e) => e.toString().split('.').last == map['college_year'],
+        orElse: () => CollegeYear.PRIM,
+      ),
+      profession: map['profession'] as String? ?? '',
+      weeklyOffDays: List<String>.from(map['weekly_off_days'] as List? ?? []),
+      role: MemberRole.values.firstWhere(
+        (e) => e.toString().split('.').last == map['role'],
+        orElse: () => MemberRole.basic_member,
+      ),
+      createdAt: DateTime.parse(map['created_at'] as String),
+      updatedAt: DateTime.parse(map['updated_at'] as String),
+    );
+  }
+
   MemberModel copyWith({
     String? id,
     String? familyId,

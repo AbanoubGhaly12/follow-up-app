@@ -7,10 +7,10 @@ class DashboardCubit extends Cubit<DashboardState> {
 
   DashboardCubit({required this.repository}) : super(DashboardInitial());
 
-  Future<void> loadStats() async {
+  Future<void> loadStats({String? userId, bool isSuperAdmin = true}) async {
     emit(DashboardLoading());
     try {
-      final stats = await repository.getStats();
+      final stats = await repository.getStats(userId: userId, isSuperAdmin: isSuperAdmin);
       emit(DashboardLoaded(stats));
     } catch (e) {
       emit(DashboardError(e.toString()));
