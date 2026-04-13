@@ -3,6 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:uuid/uuid.dart';
+import '../../../followups/data/models/followup_model.dart';
+import '../../../followups/presentation/bloc/followup_bloc.dart';
+import '../../../followups/presentation/bloc/followup_event.dart';
 import '../../../templates/data/models/template_model.dart';
 import '../../../templates/presentation/bloc/template_bloc.dart';
 import '../../../templates/presentation/bloc/template_state.dart';
@@ -176,6 +180,27 @@ class _BirthdaysListPageState extends State<BirthdaysListPage> {
     }
   }
 
+  void _markFollowupDone(MemberModel member) {
+    final followup = FollowupModel(
+      id: const Uuid().v4(),
+      familyId: member.familyId,
+      memberId: member.id,
+      memberName: member.name,
+      followupDate: DateTime.now(),
+      notes: 'Yearly Birthday Follow-up',
+      type: FollowupType.birthday,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+
+    context.read<FollowupBloc>().add(AddFollowup(followup, member.familyId));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(AppLocalizations.of(context)!.birthdayFollowupDone)),
+    );
+    // Reload members to reflect changes
+    context.read<MemberBloc>().add(const LoadMembers(familyId: null));
+  }
+
   @override
   void initState() {
     super.initState();
@@ -211,18 +236,18 @@ class _BirthdaysListPageState extends State<BirthdaysListPage> {
                       state.members.where((member) {
                         final matchesSearch =
                             member.name.toLowerCase().contains(
-                              _searchQuery.toLowerCase(),
+                                _searchQuery.toLowerCase(),
                             ) ||
                             member.mobileNumber.toLowerCase().contains(
-                              _searchQuery.toLowerCase(),
+                                _searchQuery.toLowerCase(),
                             );
                         if (!matchesSearch) return false;
 
                         final bDate = member.birthdate;
                         switch (_currentFilter) {
                           case _BirthdayFilter.day:
-                            return bDate.day == _selectedDate.day &&
-                                bDate.month == _selectedDate.month;
+                            return bDate?.day == _selectedDate.day &&
+                                bDate?.month == _selectedDate.month;
                           case _BirthdayFilter.week:
                             // Check if birthday falls within 7 days of _selectedDate (ignoring year)
                             final start = DateTime(
@@ -233,8 +258,8 @@ class _BirthdaysListPageState extends State<BirthdaysListPage> {
                             final end = start.add(const Duration(days: 7));
                             var bNormalized = DateTime(
                               2000,
-                              bDate.month,
-                              bDate.day,
+                              bDate?.month ?? 1,
+                              bDate?.day ?? 1,
                             );
 
                             // Handle year wrap around (e.g. Dec 30 to Jan 5)
@@ -255,16 +280,16 @@ class _BirthdaysListPageState extends State<BirthdaysListPage> {
                                 (bNormalized.isBefore(end) ||
                                     bNormalized.isAtSameMomentAs(end));
                           case _BirthdayFilter.month:
-                            return bDate.month == _selectedDate.month;
+                            return bDate?.month == _selectedDate.month;
                         }
                       }).toList();
 
                   // Sort by month and day
                   birthdayMembers.sort((a, b) {
-                    if (a.birthdate.month != b.birthdate.month) {
-                      return a.birthdate.month.compareTo(b.birthdate.month);
+                    if (a.birthdate?.month != b.birthdate?.month) {
+                      return (a.birthdate?.month??0).compareTo(b.birthdate?.month??1);
                     }
-                    return a.birthdate.day.compareTo(b.birthdate.day);
+                    return (a.birthdate?.day??0).compareTo(b.birthdate?.day ??1);
                   });
 
                   if (birthdayMembers.isEmpty) {
@@ -275,8 +300,9 @@ class _BirthdaysListPageState extends State<BirthdaysListPage> {
                     itemCount: birthdayMembers.length,
                     itemBuilder: (context, index) {
                       final member = birthdayMembers[index];
-                      final age = currentYear - member.birthdate.year;
+                      final age = currentYear - (member.birthdate?.year??0);
                       final dateFormat = DateFormat('MMMM d');
+                      final isDone = member.isBirthdayFollowedUpThisYear;
 
                       return Card(
                         elevation: 4,
@@ -290,17 +316,18 @@ class _BirthdaysListPageState extends State<BirthdaysListPage> {
                         child: Container(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12),
+                            color: isDone ? Colors.green.shade50 : null,
                             border: Border(
                               left: BorderSide(
-                                color: Colors.pink.shade300,
+                                color: isDone ? Colors.green : Colors.pink.shade300,
                                 width: 6,
                               ),
                             ),
                           ),
                           child: ListTile(
                             leading: Icon(
-                              Icons.cake,
-                              color: Colors.pink.shade300,
+                              isDone ? Icons.check_circle : Icons.cake,
+                              color: isDone ? Colors.green : Colors.pink.shade300,
                               size: 30,
                             ),
                             title: Text(
@@ -312,12 +339,21 @@ class _BirthdaysListPageState extends State<BirthdaysListPage> {
                             subtitle: Text(
                               l10n.turnsAgeOn(
                                 age.toString(),
-                                dateFormat.format(member.birthdate),
+                                dateFormat.format(member.birthdate??DateTime.now()),
                               ),
                             ),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
+                                if (!isDone)
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.done_all,
+                                      color: Colors.blue,
+                                    ),
+                                    tooltip: l10n.markAsFollowedUp,
+                                    onPressed: () => _markFollowupDone(member),
+                                  ),
                                 IconButton(
                                   icon: const Icon(
                                     Icons.phone,

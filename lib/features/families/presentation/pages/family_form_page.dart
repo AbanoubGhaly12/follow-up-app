@@ -22,6 +22,8 @@ class FamilyFormPage extends StatefulWidget {
 class _FamilyFormPageState extends State<FamilyFormPage> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _familyHeadController;
+  late TextEditingController _mobileNumberController;
+  late TextEditingController _tagController;
   late TextEditingController _landlineController;
   late TextEditingController _streetController;
   late TextEditingController _buildingController;
@@ -35,6 +37,12 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
     super.initState();
     _familyHeadController = TextEditingController(
       text: widget.family?.familyHead ?? '',
+    );
+    _mobileNumberController = TextEditingController(
+      text: widget.family?.mobileNumber ?? '',
+    );
+    _tagController = TextEditingController(
+      text: widget.family?.tag ?? '',
     );
     _landlineController = TextEditingController(
       text: widget.family?.landline ?? '',
@@ -60,6 +68,8 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
   @override
   void dispose() {
     _familyHeadController.dispose();
+    _mobileNumberController.dispose();
+    _tagController.dispose();
     _landlineController.dispose();
     _streetController.dispose();
     _buildingController.dispose();
@@ -99,6 +109,10 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
           id: const Uuid().v4(),
           streetId: widget.streetId,
           familyHead: _familyHeadController.text,
+          tag: 'FAMILY-${const Uuid().v4()}',
+          mobileNumber: _mobileNumberController.text.startsWith('+2')
+              ? _mobileNumberController.text
+              : '+2${_mobileNumberController.text}',
           marriageDate: _marriageDate,
           landline: _landlineController.text,
           addressInfo: address,
@@ -109,6 +123,10 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
       } else {
         final updatedFamily = widget.family!.copyWith(
           familyHead: _familyHeadController.text,
+          tag: widget.family!.tag,
+          mobileNumber: _mobileNumberController.text.startsWith('+2')
+              ? _mobileNumberController.text
+              : '+2${_mobileNumberController.text}',
           marriageDate: _marriageDate,
           landline: _landlineController.text,
           addressInfo: address,
@@ -141,6 +159,22 @@ class _FamilyFormPageState extends State<FamilyFormPage> {
                         value == null || value.isEmpty
                             ? l10n.requiredField
                             : null,
+              ),
+              const SizedBox(height: 16),
+              if (widget.family != null) ...[
+                TextFormField(
+                  controller: _tagController,
+                  decoration: InputDecoration(labelText: l10n.tag),
+                  readOnly: true,
+                ),
+                const SizedBox(height: 16),
+              ],
+              TextFormField(
+                controller: _mobileNumberController,
+                decoration: InputDecoration(
+                  labelText: l10n.mobileNumber,
+                  suffixText: '+2',
+                ),
               ),
               const SizedBox(height: 16),
               TextFormField(

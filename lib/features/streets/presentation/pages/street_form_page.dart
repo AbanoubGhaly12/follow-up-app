@@ -22,16 +22,19 @@ class StreetFormPage extends StatefulWidget {
 class _StreetFormPageState extends State<StreetFormPage> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
+  late TextEditingController _tagController;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.street?.name ?? '');
+    _tagController = TextEditingController(text: widget.street?.tag ?? '');
   }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _tagController.dispose();
     super.dispose();
   }
 
@@ -45,6 +48,7 @@ class _StreetFormPageState extends State<StreetFormPage> {
           id: const Uuid().v4(),
           zoneId: widget.zoneId,
           name: _nameController.text,
+          tag: 'STREET-${const Uuid().v4()}',
           createdAt: now,
           updatedAt: now,
         );
@@ -53,6 +57,7 @@ class _StreetFormPageState extends State<StreetFormPage> {
         // Update
         final updatedStreet = widget.street!.copyWith(
           name: _nameController.text,
+          tag: widget.street!.tag,
           updatedAt: now,
         );
         context.read<StreetBloc>().add(UpdateStreet(updatedStreet));
@@ -83,7 +88,17 @@ class _StreetFormPageState extends State<StreetFormPage> {
                             ? l10n.requiredField
                             : null,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
+              if (widget.street != null) ...[
+                TextFormField(
+                  controller: _tagController,
+                  decoration: InputDecoration(
+                    labelText: l10n.tag,
+                  ),
+                  readOnly: true,
+                ),
+                const SizedBox(height: 16),
+              ],
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(

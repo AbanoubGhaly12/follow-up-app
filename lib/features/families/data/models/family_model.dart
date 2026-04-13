@@ -29,6 +29,9 @@ class FamilyModel extends Equatable {
   final String id;
   final String streetId;
   final String familyHead;
+  final String tag;
+  final String mobileNumber;
+  final bool isSynced;
   final DateTime? marriageDate;
   final String landline;
   final AddressInfo addressInfo;
@@ -41,6 +44,9 @@ class FamilyModel extends Equatable {
     required this.id,
     required this.streetId,
     this.familyHead = '',
+    this.tag = '',
+    this.mobileNumber = '',
+    this.isSynced = true,
     this.marriageDate,
     required this.landline,
     required this.addressInfo,
@@ -55,6 +61,9 @@ class FamilyModel extends Equatable {
     id,
     streetId,
     familyHead,
+    tag,
+    mobileNumber,
+    isSynced,
     marriageDate,
     landline,
     addressInfo,
@@ -69,6 +78,9 @@ class FamilyModel extends Equatable {
       id: map['id'] as String,
       streetId: map['street_id'] as String,
       familyHead: map['family_head'] as String? ?? '',
+      tag: map['tag'] as String? ?? '',
+      mobileNumber: map['mobile_number'] as String? ?? '',
+      isSynced: (map['is_synced'] as int? ?? 1) == 1,
       marriageDate:
           map['marriage_date'] != null
               ? DateTime.parse(map['marriage_date'] as String)
@@ -96,6 +108,9 @@ class FamilyModel extends Equatable {
       'id': id,
       'street_id': streetId,
       'family_head': familyHead,
+      'tag': tag,
+      'mobile_number': mobileNumber,
+      'is_synced': isSynced ? 1 : 0,
       'marriage_date': marriageDate?.toIso8601String(),
       'landline': landline,
       'street': addressInfo.street,
@@ -112,6 +127,8 @@ class FamilyModel extends Equatable {
     return {
       'street_id': streetId,
       'family_head': familyHead,
+      'tag': tag,
+      'mobile_number': mobileNumber,
       'marriage_date': marriageDate?.toIso8601String(),
       'landline': landline,
       'street': addressInfo.street,
@@ -129,6 +146,9 @@ class FamilyModel extends Equatable {
       id: id,
       streetId: map['street_id'] as String? ?? '',
       familyHead: map['family_head'] as String? ?? '',
+      tag: map['tag'] as String? ?? '',
+      mobileNumber: map['mobile_number'] as String? ?? '',
+      isSynced: true,
       marriageDate: map['marriage_date'] != null
           ? DateTime.parse(map['marriage_date'] as String)
           : null,
@@ -149,6 +169,9 @@ class FamilyModel extends Equatable {
     String? id,
     String? streetId,
     String? familyHead,
+    String? tag,
+    String? mobileNumber,
+    bool? isSynced,
     DateTime? marriageDate,
     String? landline,
     AddressInfo? addressInfo,
@@ -161,6 +184,9 @@ class FamilyModel extends Equatable {
       id: id ?? this.id,
       streetId: streetId ?? this.streetId,
       familyHead: familyHead ?? this.familyHead,
+      tag: tag ?? this.tag,
+      mobileNumber: mobileNumber ?? this.mobileNumber,
+      isSynced: isSynced ?? this.isSynced,
       marriageDate: marriageDate ?? this.marriageDate,
       landline: landline ?? this.landline,
       addressInfo: addressInfo ?? this.addressInfo,

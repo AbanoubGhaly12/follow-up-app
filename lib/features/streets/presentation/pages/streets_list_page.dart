@@ -1,7 +1,11 @@
+import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:csv/csv.dart';
 import '../bloc/street_bloc.dart';
 import '../bloc/street_event.dart';
 import '../bloc/street_state.dart';
@@ -34,6 +38,86 @@ class _StreetsListPageState extends State<StreetsListPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.streets), // We will add to l10n
+        actions: [
+          BlocBuilder<AuthCubit, AuthState>(
+            builder: (context, authState) {
+              final isSuperAdmin = (authState is AuthAuthenticated) && (authState.profile?.isSuperAdmin ?? false);
+              if (!isSuperAdmin || widget.isReadOnly || widget.zoneId == null) return const SizedBox();
+              return Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.upload_file),
+                    tooltip: 'Import CSV',
+                    onPressed: () async {
+                      final result = await FilePicker.pickFiles(
+                        type: FileType.custom,
+                        allowedExtensions: ['csv'],
+                      );
+                      if (result != null) {
+                        try {
+                          String csvString;
+                          if (result.files.single.bytes != null) {
+                            csvString = utf8.decode(result.files.single.bytes!);
+                          } else {
+                            final file = File(result.files.single.path!);
+                            csvString = await file.readAsString();
+                          }
+                          final eol = csvString.contains('\r\n') ? '\r\n' : '\n';
+                          final fields = CsvToListConverter(eol: eol).convert(csvString);
+                          
+                          if (fields.length > 1) { // headers + at least 1 row
+                            final headers = fields.first.map((e) => e.toString().toLowerCase().trim()).toList();
+                            final nameIndex = headers.indexOf('name');
+                            final tagIndex = headers.indexOf('tag');
+                            
+                            if (nameIndex != -1 && tagIndex != -1) {
+                              final List<Map<String, dynamic>> csvData = [];
+                              for (var i = 1; i < fields.length; i++) {
+                                final row = fields[i];
+                                csvData.add({
+                                  'name': nameIndex < row.length ? row[nameIndex] : '',
+                                  'tag': tagIndex < row.length ? row[tagIndex] : '',
+                                });
+                              }
+                              if (context.mounted) {
+                                context.read<StreetBloc>().add(ImportStreetsCsv(csvData, widget.zoneId!));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Importing streets...'))
+                                );
+                              }
+                            } else {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Invalid CSV. Missing "name" or "tag" column.'))
+                                );
+                              }
+                            }
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Error parsing CSV: $e'))
+                            );
+                          }
+                        }
+                      }
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.cloud_upload),
+                    tooltip: 'Upload offline to Cloud',
+                    onPressed: () {
+                      context.read<StreetBloc>().add(const SyncOfflineStreets());
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Syncing offline streets...'))
+                      );
+                    },
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
       ),
       body: BlocBuilder<StreetBloc, StreetState>(
         builder: (context, state) {

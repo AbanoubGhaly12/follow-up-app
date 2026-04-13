@@ -5,13 +5,16 @@ enum MaritalStatus { single, married, divorced, widowed }
 
 enum CollegeYear { PRESCHOOL, KG, PRIM, PREP, SEC, UNIV }
 
-enum MemberRole { father, mother, child, basic_member }
+enum MemberRole { father, mother, child, member }
 
 class MemberModel extends Equatable {
   final String id;
   final String familyId;
   final String name;
-  final DateTime birthdate;
+  final String tag;
+  final bool isSynced;
+  final bool isFamilyHead;
+  final DateTime? birthdate;
   final String mobileNumber;
   final String email;
   final String confessionFather;
@@ -26,6 +29,8 @@ class MemberModel extends Equatable {
   final List<String> weeklyOffDays;
   final MemberRole role;
   final bool isFollowedUpThisMonth;
+  final bool isBirthdayFollowedUpThisYear;
+  final bool isCondolenceFollowedUpThisYear;
   final DateTime? lastFollowupDate;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -34,7 +39,10 @@ class MemberModel extends Equatable {
     required this.id,
     required this.familyId,
     required this.name,
-    required this.birthdate,
+    this.tag = '',
+    this.isSynced = true,
+    this.isFamilyHead = false,
+    this.birthdate,
     required this.mobileNumber,
     required this.email,
     required this.confessionFather,
@@ -49,6 +57,8 @@ class MemberModel extends Equatable {
     required this.weeklyOffDays,
     required this.role,
     this.isFollowedUpThisMonth = false,
+    this.isBirthdayFollowedUpThisYear = false,
+    this.isCondolenceFollowedUpThisYear = false,
     this.lastFollowupDate,
     required this.createdAt,
     required this.updatedAt,
@@ -59,6 +69,9 @@ class MemberModel extends Equatable {
     id,
     familyId,
     name,
+    tag,
+    isSynced,
+    isFamilyHead,
     birthdate,
     mobileNumber,
     email,
@@ -74,6 +87,8 @@ class MemberModel extends Equatable {
     weeklyOffDays,
     role,
     isFollowedUpThisMonth,
+    isBirthdayFollowedUpThisYear,
+    isCondolenceFollowedUpThisYear,
     lastFollowupDate,
     createdAt,
     updatedAt,
@@ -84,7 +99,12 @@ class MemberModel extends Equatable {
       id: map['id'] as String,
       familyId: map['family_id'] as String,
       name: map['name'] as String,
-      birthdate: DateTime.parse(map['birthdate'] as String),
+      tag: map['tag'] as String? ?? '',
+      isSynced: (map['is_synced'] as int? ?? 1) == 1,
+      isFamilyHead: (map['is_family_head'] as int? ?? 0) == 1,
+      birthdate: map['birthdate'] != null && map['birthdate'].toString().isNotEmpty
+          ? DateTime.tryParse(map['birthdate'] as String)
+          : null,
       mobileNumber: map['mobile_number'] as String,
       email: map['email'] as String,
       confessionFather: map['confession_father'] as String,
@@ -94,7 +114,7 @@ class MemberModel extends Equatable {
       belongToChurchName: map['belong_to_church_name'] as String,
       isDead: (map['is_dead'] as int) == 1,
       deathDate:
-          map['death_date'] != null
+          map['death_date'] != null && map['death_date'].toString().isNotEmpty
               ? DateTime.parse(map['death_date'] as String)
               : null,
       maritalStatus: MaritalStatus.values.firstWhere(
@@ -112,6 +132,8 @@ class MemberModel extends Equatable {
         (e) => e.toString().split('.').last == map['role'],
       ),
       isFollowedUpThisMonth: (map['is_followed_up_this_month'] as int? ?? 0) == 1,
+      isBirthdayFollowedUpThisYear: (map['is_birthday_followed_up_this_year'] as int? ?? 0) == 1,
+      isCondolenceFollowedUpThisYear: (map['is_condolence_followed_up_this_year'] as int? ?? 0) == 1,
       lastFollowupDate:
           map['last_followup_date'] != null
               ? DateTime.parse(map['last_followup_date'] as String)
@@ -126,7 +148,10 @@ class MemberModel extends Equatable {
       'id': id,
       'family_id': familyId,
       'name': name,
-      'birthdate': birthdate.toIso8601String(),
+      'tag': tag,
+      'is_synced': isSynced ? 1 : 0,
+      'is_family_head': isFamilyHead ? 1 : 0,
+      'birthdate': birthdate?.toIso8601String() ?? '',
       'mobile_number': mobileNumber,
       'email': email,
       'confession_father': confessionFather,
@@ -149,7 +174,9 @@ class MemberModel extends Equatable {
     return {
       'family_id': familyId,
       'name': name,
-      'birthdate': birthdate.toIso8601String(),
+      'tag': tag,
+      'is_family_head': isFamilyHead,
+      'birthdate': birthdate?.toIso8601String() ?? '',
       'mobile_number': mobileNumber,
       'email': email,
       'confession_father': confessionFather,
@@ -173,7 +200,12 @@ class MemberModel extends Equatable {
       id: id,
       familyId: map['family_id'] as String? ?? '',
       name: map['name'] as String? ?? '',
-      birthdate: DateTime.parse(map['birthdate'] as String),
+      tag: map['tag'] as String? ?? '',
+      isSynced: true,
+      isFamilyHead: map['is_family_head'] == true || map['is_family_head'] == 1,
+      birthdate: map['birthdate'] != null && map['birthdate'].toString().isNotEmpty
+          ? DateTime.tryParse(map['birthdate'] as String)
+          : null,
       mobileNumber: map['mobile_number'] as String? ?? '',
       email: map['email'] as String? ?? '',
       confessionFather: map['confession_father'] as String? ?? '',
@@ -181,7 +213,7 @@ class MemberModel extends Equatable {
       nationalId: map['national_id'] as String? ?? '',
       belongToChurchName: map['belong_to_church_name'] as String? ?? '',
       isDead: map['is_dead'] == true || map['is_dead'] == 1,
-      deathDate: map['death_date'] != null
+      deathDate: map['death_date'] != null && map['death_date'].toString().isNotEmpty
           ? DateTime.parse(map['death_date'] as String)
           : null,
       maritalStatus: MaritalStatus.values.firstWhere(
@@ -196,7 +228,7 @@ class MemberModel extends Equatable {
       weeklyOffDays: List<String>.from(map['weekly_off_days'] as List? ?? []),
       role: MemberRole.values.firstWhere(
         (e) => e.toString().split('.').last == map['role'],
-        orElse: () => MemberRole.basic_member,
+        orElse: () => MemberRole.member,
       ),
       createdAt: DateTime.parse(map['created_at'] as String),
       updatedAt: DateTime.parse(map['updated_at'] as String),
@@ -207,6 +239,9 @@ class MemberModel extends Equatable {
     String? id,
     String? familyId,
     String? name,
+    String? tag,
+    bool? isSynced,
+    bool? isFamilyHead,
     DateTime? birthdate,
     String? mobileNumber,
     String? email,
@@ -222,6 +257,8 @@ class MemberModel extends Equatable {
     List<String>? weeklyOffDays,
     MemberRole? role,
     bool? isFollowedUpThisMonth,
+    bool? isBirthdayFollowedUpThisYear,
+    bool? isCondolenceFollowedUpThisYear,
     DateTime? lastFollowupDate,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -230,6 +267,9 @@ class MemberModel extends Equatable {
       id: id ?? this.id,
       familyId: familyId ?? this.familyId,
       name: name ?? this.name,
+      tag: tag ?? this.tag,
+      isSynced: isSynced ?? this.isSynced,
+      isFamilyHead: isFamilyHead ?? this.isFamilyHead,
       birthdate: birthdate ?? this.birthdate,
       mobileNumber: mobileNumber ?? this.mobileNumber,
       email: email ?? this.email,
@@ -247,6 +287,10 @@ class MemberModel extends Equatable {
       role: role ?? this.role,
       isFollowedUpThisMonth:
           isFollowedUpThisMonth ?? this.isFollowedUpThisMonth,
+      isBirthdayFollowedUpThisYear:
+          isBirthdayFollowedUpThisYear ?? this.isBirthdayFollowedUpThisYear,
+      isCondolenceFollowedUpThisYear:
+          isCondolenceFollowedUpThisYear ?? this.isCondolenceFollowedUpThisYear,
       lastFollowupDate: lastFollowupDate ?? this.lastFollowupDate,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

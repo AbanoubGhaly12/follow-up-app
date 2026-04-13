@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-enum FollowupType { phone, visit, churchMeeting, onlineCall, other }
+enum FollowupType { phone, visit, churchMeeting, onlineCall, birthday, condolence, other }
 
 class FollowupModel extends Equatable {
   final String id;

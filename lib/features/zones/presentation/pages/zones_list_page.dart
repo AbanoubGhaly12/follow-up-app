@@ -1,7 +1,11 @@
+import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:csv/csv.dart';
 import '../../../../core/settings/settings_cubit.dart';
 import '../../../../core/widgets/detail_view_sheet.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
@@ -37,6 +41,83 @@ class _ZonesListPageState extends State<ZonesListPage> {
       appBar: AppBar(
         title: Text(widget.showOnlyOtherZones ? (l10n.otherZones ?? 'Other Zones') : l10n.zones),
         actions: [
+          BlocBuilder<AuthCubit, AuthState>(
+            builder: (context, authState) {
+              final isSuperAdmin = (authState is AuthAuthenticated) && (authState.profile?.isSuperAdmin ?? false);
+              if (!isSuperAdmin || widget.showOnlyOtherZones) return const SizedBox();
+              return Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.upload_file),
+                    tooltip: 'Import CSV',
+                    onPressed: () async {
+                      final result = await FilePicker.pickFiles(
+                        type: FileType.custom,
+                        allowedExtensions: ['csv'],
+                      );
+                      if (result != null) {
+                        try {
+                          String csvString;
+                          if (result.files.single.bytes != null) {
+                            csvString = utf8.decode(result.files.single.bytes!);
+                          } else {
+                            final file = File(result.files.single.path!);
+                            csvString = await file.readAsString();
+                          }
+                          final eol = csvString.contains('\r\n') ? '\r\n' : '\n';
+                          final fields = CsvToListConverter(eol: eol).convert(csvString);
+                          if (fields[0].length > 1) { // headers + at least 1 row
+
+                            // 1. Convert CSV to List of Lists
+                            // 2. Extract the header row (the first row)
+                            List<String> headers = fields[0].map((e) => e.toString()).toList();
+
+                            // 3. Map the remaining rows to Maps
+                            List<Map<String, dynamic>> mappedData = fields.skip(1).map((row) {
+                              Map<String, dynamic> map = {};
+                              for (int i = 0; i < headers.length; i++) {
+                                map[headers[i]] = row[i];
+                              }
+                              return map;
+                            }).toList();
+                              if (context.mounted) {
+                                context.read<ZoneBloc>().add(ImportZonesCsv(mappedData));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Importing zones...'))
+                                );
+                            } else {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Invalid CSV. Missing "name" or "tag" column.'))
+                                );
+                              }
+                            }
+                          }
+                        }
+                         catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Error parsing CSV: $e'))
+                            );
+                          }
+                        }
+                      }
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.cloud_upload),
+                    tooltip: 'Upload offline to Cloud',
+                    onPressed: () {
+                      context.read<ZoneBloc>().add(SyncOfflineZones());
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Syncing offline zones...'))
+                      );
+                    },
+                  ),
+                ],
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.language),
             onPressed: () {
@@ -45,7 +126,14 @@ class _ZonesListPageState extends State<ZonesListPage> {
           ),
         ],
       ),
-      body: BlocBuilder<ZoneBloc, ZoneState>(
+      body: BlocConsumer<ZoneBloc, ZoneState>(
+        listener: (context, state) {
+          if (state is ZoneError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message)),
+            );
+          }
+        },
         builder: (context, state) {
           if (state is ZoneLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -161,7 +249,11 @@ class _ZonesListPageState extends State<ZonesListPage> {
           } else if (state is ZoneError) {
             return Center(child: Text(l10n.error(state.message)));
           }
-          return Center(child: Text(l10n.initialState));
+          // Default when not loading/loaded (e.g., initial or error but we already show snackbar)
+          if (state is ZoneInitial) {
+            return Center(child: Text(l10n.initialState));
+          }
+          return const Center(child: CircularProgressIndicator());
         },
       ),
       floatingActionButton: BlocBuilder<AuthCubit, AuthState>(

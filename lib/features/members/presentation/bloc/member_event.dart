@@ -45,3 +45,19 @@ class DeleteMember extends MemberEvent {
   @override
   List<Object?> get props => [id, familyId];
 }
+
+class ImportMembersCsv extends MemberEvent {
+  final List<Map<String, dynamic>> csvData;
+
+  const ImportMembersCsv(this.csvData);
+
+  @override
+  List<Object?> get props => [csvData];
+}
+
+class SyncOfflineMembers extends MemberEvent {
+  const SyncOfflineMembers();
+
+  @override
+  List<Object?> get props => [];
+}

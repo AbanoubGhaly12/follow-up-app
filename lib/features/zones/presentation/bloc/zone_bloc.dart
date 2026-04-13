@@ -16,6 +16,8 @@ class ZoneBloc extends Bloc<ZoneEvent, ZoneState> {
     on<AddZone>(_onAddZone);
     on<UpdateZone>(_onUpdateZone);
     on<DeleteZone>(_onDeleteZone);
+    on<ImportZonesCsv>(_onImportZonesCsv);
+    on<SyncOfflineZones>(_onSyncOfflineZones);
   }
 
   Future<void> _onLoadZones(LoadZones event, Emitter<ZoneState> emit) async {
@@ -57,6 +59,28 @@ class ZoneBloc extends Bloc<ZoneEvent, ZoneState> {
       add(LoadZones(isSuperAdmin: _isSuperAdmin, otherZonesOnly: _otherZonesOnly));
     } catch (e) {
       emit(ZoneError(e.toString()));
+    }
+  }
+
+  Future<void> _onImportZonesCsv(ImportZonesCsv event, Emitter<ZoneState> emit) async {
+    try {
+      await _zoneRepository.importZonesFromCsv(event.csvData);
+      add(LoadZones(isSuperAdmin: _isSuperAdmin, otherZonesOnly: _otherZonesOnly));
+    } catch (e) {
+      emit(ZoneError(e.toString()));
+    }
+  }
+
+  Future<void> _onSyncOfflineZones(SyncOfflineZones event, Emitter<ZoneState> emit) async {
+    try {
+      await _zoneRepository.syncOfflineZones();
+      add(LoadZones(isSuperAdmin: _isSuperAdmin, otherZonesOnly: _otherZonesOnly));
+    } catch (e) {
+      if (e.toString().contains('network_unavailable')) {
+        emit(const ZoneError("Network unavailable. Please connect and try again."));
+      } else {
+        emit(ZoneError(e.toString()));
+      }
     }
   }
 }

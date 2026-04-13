@@ -192,6 +192,13 @@ class _DashboardPageState extends State<DashboardPage> {
                             const SizedBox(height: 12),
                             _buildActionButton(
                               context,
+                              title: l10n.deadMembers,
+                              icon: Icons.person_off,
+                              onTap: () => context.push('/dead-members'),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildActionButton(
+                              context,
                               title: l10n.messageTemplates ?? "Message Templates",
                               icon: Icons.message,
                               onTap: () => context.push('/templates'),

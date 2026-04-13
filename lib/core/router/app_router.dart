@@ -21,6 +21,7 @@ import '../../features/families/data/models/family_model.dart';
 import '../../features/members/presentation/pages/members_list_page.dart';
 import '../../features/members/presentation/pages/member_form_page.dart';
 import '../../features/members/presentation/pages/birthdays_list_page.dart';
+import '../../features/members/presentation/pages/dead_members_list_page.dart';
 import '../../features/templates/presentation/pages/templates_list_page.dart';
 import '../../features/templates/presentation/pages/template_form_page.dart';
 import '../../features/templates/data/models/template_model.dart';
@@ -108,6 +109,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/birthdays',
       builder: (context, state) => const BirthdaysListPage(),
+    ),
+    GoRoute(
+      path: '/dead-members',
+      builder: (context, state) => const DeadMembersListPage(),
     ),
     GoRoute(
       path: '/streets',

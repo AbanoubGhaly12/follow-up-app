@@ -30,13 +30,15 @@ class _MemberFormPageState extends State<MemberFormPage> {
   late TextEditingController _nationalIdController;
   late TextEditingController _belongChurchController;
   late TextEditingController _professionController;
+  late TextEditingController _tagController;
 
   DateTime? _birthdate;
+  bool _isFamilyHead = false;
   bool _isDead = false;
   DateTime? _deathDate;
   MaritalStatus _maritalStatus = MaritalStatus.single;
   CollegeYear _collegeYear = CollegeYear.UNIV; // Default
-  MemberRole _role = MemberRole.basic_member;
+  MemberRole _role = MemberRole.member;
   final List<String> _weeklyOffDays = [];
 
   final List<String> _allDays = [
@@ -72,13 +74,17 @@ class _MemberFormPageState extends State<MemberFormPage> {
     _professionController = TextEditingController(
       text: widget.member?.profession ?? '',
     );
+    _tagController = TextEditingController(
+      text: widget.member?.tag ?? '',
+    );
 
     _birthdate = widget.member?.birthdate;
+    _isFamilyHead = widget.member?.isFamilyHead ?? false;
     _isDead = widget.member?.isDead ?? false;
     _deathDate = widget.member?.deathDate;
     _maritalStatus = widget.member?.maritalStatus ?? MaritalStatus.single;
     _collegeYear = widget.member?.collegeYear ?? CollegeYear.UNIV;
-    _role = widget.member?.role ?? MemberRole.basic_member;
+    _role = widget.member?.role ?? MemberRole.member;
     if (widget.member?.weeklyOffDays != null) {
       _weeklyOffDays.addAll(widget.member!.weeklyOffDays);
     }
@@ -94,6 +100,7 @@ class _MemberFormPageState extends State<MemberFormPage> {
     _nationalIdController.dispose();
     _belongChurchController.dispose();
     _professionController.dispose();
+    _tagController.dispose();
     super.dispose();
   }
 
@@ -116,25 +123,49 @@ class _MemberFormPageState extends State<MemberFormPage> {
     }
   }
 
+  String _localizeMaritalStatus(MaritalStatus status, AppLocalizations l10n) {
+    switch (status) {
+      case MaritalStatus.single: return l10n.single;
+      case MaritalStatus.married: return l10n.married;
+      case MaritalStatus.divorced: return l10n.divorced;
+      case MaritalStatus.widowed: return l10n.widow;
+    }
+  }
+
+  String _localizeCollegeYear(CollegeYear year, AppLocalizations l10n) {
+    switch (year) {
+      case CollegeYear.PRESCHOOL: return l10n.preschool;
+      case CollegeYear.KG: return l10n.kg;
+      case CollegeYear.PRIM: return l10n.primary;
+      case CollegeYear.PREP: return l10n.preparatory;
+      case CollegeYear.SEC: return l10n.secondary;
+      case CollegeYear.UNIV: return l10n.university;
+    }
+  }
+
+  String _localizeRole(MemberRole role, AppLocalizations l10n) {
+    switch (role) {
+      case MemberRole.father: return l10n.husband;
+      case MemberRole.mother: return l10n.wife;
+      case MemberRole.child: return l10n.son;
+      case MemberRole.member: return l10n.member;
+    }
+  }
+
   void _saveMember() {
     if (_formKey.currentState!.validate()) {
-      if (_birthdate == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.pleaseSelectBirthdate),
-          ),
-        );
-        return;
-      }
-
       final now = DateTime.now();
 
       final memberData = MemberModel(
         id: widget.member?.id ?? const Uuid().v4(),
         familyId: widget.familyId,
         name: _nameController.text,
-        birthdate: _birthdate!,
-        mobileNumber: _mobileController.text,
+        tag: widget.member?.tag ?? 'MEMBER-${const Uuid().v4()}',
+        isFamilyHead: _isFamilyHead,
+        birthdate: _birthdate,
+        mobileNumber: _mobileController.text.startsWith('+20')
+            ? _mobileController.text 
+            : '+20${_mobileController.text}',
         email: _emailController.text,
         confessionFather: _confessiFatherController.text,
         confessionFatherChurchName: _confessiFatherChurchController.text,
@@ -174,10 +205,24 @@ class _MemberFormPageState extends State<MemberFormPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (widget.member != null) ...[
+                TextFormField(
+                  controller: _tagController,
+                  decoration: InputDecoration(labelText: l10n.tag),
+                  readOnly: true,
+                ),
+                const SizedBox(height: 16),
+              ],
               TextFormField(
                 controller: _nameController,
                 decoration: InputDecoration(labelText: l10n.name),
                 validator: (v) => v!.isEmpty ? l10n.requiredField : null,
+              ),
+              const SizedBox(height: 16),
+              SwitchListTile(
+                title: Text(l10n.isFamilyHead),
+                value: _isFamilyHead,
+                onChanged: (v) => setState(() => _isFamilyHead = v),
               ),
               const SizedBox(height: 16),
               ListTile(
@@ -194,7 +239,10 @@ class _MemberFormPageState extends State<MemberFormPage> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _mobileController,
-                decoration: InputDecoration(labelText: l10n.mobileNumber),
+                decoration: InputDecoration(
+                  labelText: l10n.mobileNumber,
+                  suffixText: '+2',
+                ),
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -238,32 +286,35 @@ class _MemberFormPageState extends State<MemberFormPage> {
               DropdownButtonFormField<MaritalStatus>(
                 value: _maritalStatus,
                 decoration: InputDecoration(labelText: l10n.maritalStatus),
-                items:
-                    MaritalStatus.values.map((s) {
-                      return DropdownMenuItem(
-                        value: s,
-                        child: Text(s.name),
-                      ); // Note: You'd localize s.name too ideally, skipped for brevity if not mapped
-                    }).toList(),
+                items: MaritalStatus.values.map((s) {
+                  return DropdownMenuItem(
+                    value: s,
+                    child: Text(_localizeMaritalStatus(s, l10n)),
+                  );
+                }).toList(),
                 onChanged: (v) => setState(() => _maritalStatus = v!),
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<CollegeYear>(
                 value: _collegeYear,
                 decoration: InputDecoration(labelText: l10n.educationStage),
-                items:
-                    CollegeYear.values.map((s) {
-                      return DropdownMenuItem(value: s, child: Text(s.name));
-                    }).toList(),
+                items: CollegeYear.values.map((s) {
+                  return DropdownMenuItem(
+                    value: s,
+                    child: Text(_localizeCollegeYear(s, l10n)),
+                  );
+                }).toList(),
                 onChanged: (v) => setState(() => _collegeYear = v!),
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<MemberRole>(
                 value: _role,
                 decoration: InputDecoration(labelText: l10n.familyRole),
-                items:
-                    MemberRole.values.map((s) {
-                      return DropdownMenuItem(value: s, child: Text(s.name));
+                items: MemberRole.values.map((s) {
+                  return DropdownMenuItem(
+                    value: s,
+                    child: Text(_localizeRole(s, l10n)),
+                  );
                     }).toList(),
                 onChanged: (v) => setState(() => _role = v!),
               ),

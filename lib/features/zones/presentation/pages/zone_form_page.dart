@@ -53,7 +53,7 @@ class _ZoneFormPageState extends State<ZoneFormPage> {
         final newZone = ZoneModel(
           id: const Uuid().v4(),
           name: _nameController.text,
-          tag: _tagController.text,
+          tag: 'ZONE-${const Uuid().v4()}',
           description: _descriptionController.text,
           zoneAdmins: _selectedAdminUids,
           createdAt: now,
@@ -64,7 +64,7 @@ class _ZoneFormPageState extends State<ZoneFormPage> {
         // Update
         final updatedZone = widget.zone!.copyWith(
           name: _nameController.text,
-          tag: _tagController.text,
+          tag: widget.zone!.tag,
           description: _descriptionController.text,
           zoneAdmins: _selectedAdminUids,
           updatedAt: now,
@@ -98,16 +98,16 @@ class _ZoneFormPageState extends State<ZoneFormPage> {
                             : null,
               ),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _tagController,
-                decoration: InputDecoration(labelText: l10n.tag),
-                validator:
-                    (value) =>
-                        value == null || value.isEmpty
-                            ? l10n.requiredField
-                            : null,
-              ),
-              const SizedBox(height: 16),
+              if (widget.zone != null) ...[
+                TextFormField(
+                  controller: _tagController,
+                  decoration: InputDecoration(
+                    labelText: l10n.tag,
+                  ),
+                  readOnly: true,
+                ),
+                const SizedBox(height: 16),
+              ],
               TextFormField(
                 controller: _descriptionController,
                 decoration: InputDecoration(labelText: l10n.description),

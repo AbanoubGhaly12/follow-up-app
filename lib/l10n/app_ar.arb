@@ -143,14 +143,19 @@
   "school": "مرحلة مدرسية",
   "university": "جامعي",
   "graduate": "خريج",
+  "preschool": "حضانة",
+  "kg": "رياض أطفال",
+  "primary": "ابتدائي",
+  "preparatory": "إعدادي",
+  "secondary": "ثانوي",
 
   "husband": "الزوج",
   "wife": "الزوجة",
   "son": "الابن",
   "daughter": "الابنة",
-  "basic_member": "عضو أساسي",
+  "member": "عضو",
 
-  "tag": "علامة",
+  "tag": "كود المنطقة",
   "admins": "المسؤولين",
   "zoneId": "رقم المنطقة",
   "cancel": "إلغاء",
@@ -161,8 +166,12 @@
   "pleaseSelectBirthdate": "يرجى تحديد تاريخ الميلاد",
   "couldNotLaunchApp": "تعذر فتح تطبيق المراسلة.",
   "noBirthdayTemplates": "لا توجد قوالب أعياد ميلاد! يرجى إنشاء واحدة في قوالب الرسائل أولاً.",
+  "noCondolenceTemplates": "لا توجد قوالب للتعازي! يرجى إنشاء واحدة في قوالب الرسائل أولاً.",
   "noBirthdaysOnDate": "لا توجد أعياد ميلاد في هذا التاريخ!",
   "noTemplatesAvailable": "لا توجد قوالب متاحة. قم بإنشاء واحدة في قوالب الرسائل أولاً.",
+  "birthdayFollowupDone": "تمت متابعة عيد الميلاد",
+  "condolenceFollowupDone": "تمت متابعة التعزية",
+  "markAsFollowedUp": "تحديد كمكتمل",
   "turnsAgeOn": "يبلغ {age} في {date}",
   "@turnsAgeOn": {
     "placeholders": {
@@ -242,5 +251,18 @@
   "errorsCount": "أخطاء",
   "importSequenceWarning": "⚠️ تسلسل الاستيراد مهم!",
   "category": "الفئة",
-  "otherZones": "المناطق الأخرى"
+  "otherZones": "مناطق أخرى",
+  "isFamilyHead": "هل هو رب الأسرة؟",
+  "yes": "نعم",
+  "no": "لا",
+  "deadMembers": "الأعضاء المتوفين",
+  "noDeadMembersInPeriod": "لم يتم العثور على أعضاء متوفين في هذه الفترة.",
+  "diedOn": "توفي في {date}",
+  "@diedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  }
 }

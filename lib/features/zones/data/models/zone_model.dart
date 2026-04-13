@@ -8,6 +8,7 @@ class ZoneModel extends Equatable {
   final String? description;
   final List<String> zoneAdmins;
   final String? adminUid;
+  final bool isSynced;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -18,6 +19,7 @@ class ZoneModel extends Equatable {
     this.description,
     required this.zoneAdmins,
     this.adminUid,
+    this.isSynced = true,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -30,6 +32,7 @@ class ZoneModel extends Equatable {
     description,
     zoneAdmins,
     adminUid,
+    isSynced,
     createdAt,
     updatedAt,
   ];
@@ -45,6 +48,7 @@ class ZoneModel extends Equatable {
               .map((e) => e as String)
               .toList(),
       adminUid: map['admin_uid'] as String?,
+      isSynced: (map['is_synced'] as int? ?? 1) == 1,
       createdAt: DateTime.parse(map['created_at'] as String),
       updatedAt: DateTime.parse(map['updated_at'] as String),
     );
@@ -58,6 +62,7 @@ class ZoneModel extends Equatable {
       'description': description,
       'zone_admins': jsonEncode(zoneAdmins),
       'admin_uid': adminUid,
+      'is_synced': isSynced ? 1 : 0,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -83,6 +88,7 @@ class ZoneModel extends Equatable {
       description: map['description'] as String?,
       zoneAdmins: List<String>.from(map['zone_admins'] as List? ?? []),
       adminUid: map['admin_uid'] as String?,
+      isSynced: true,
       createdAt: DateTime.parse(map['created_at'] as String),
       updatedAt: DateTime.parse(map['updated_at'] as String),
     );
@@ -95,6 +101,7 @@ class ZoneModel extends Equatable {
     String? description,
     List<String>? zoneAdmins,
     String? adminUid,
+    bool? isSynced,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -105,6 +112,7 @@ class ZoneModel extends Equatable {
       description: description ?? this.description,
       zoneAdmins: zoneAdmins ?? this.zoneAdmins,
       adminUid: adminUid ?? this.adminUid,
+      isSynced: isSynced ?? this.isSynced,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

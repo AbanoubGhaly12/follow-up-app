@@ -44,3 +44,17 @@ class DeleteStreet extends StreetEvent {
   @override
   List<Object> get props => [streetId, zoneId];
 }
+
+class ImportStreetsCsv extends StreetEvent {
+  final List<Map<String, dynamic>> csvData;
+  final String zoneId;
+
+  const ImportStreetsCsv(this.csvData, this.zoneId);
+
+  @override
+  List<Object> get props => [csvData, zoneId];
+}
+
+class SyncOfflineStreets extends StreetEvent {
+  const SyncOfflineStreets();
+}

@@ -280,7 +280,7 @@ class ImportService {
     final s = value?.toString().toLowerCase() ?? '';
     return MemberRole.values.firstWhere(
       (e) => e.name == s,
-      orElse: () => MemberRole.basic_member,
+      orElse: () => MemberRole.member,
     );
   }
 }

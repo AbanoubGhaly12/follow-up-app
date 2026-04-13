@@ -14,6 +14,8 @@ class MemberBloc extends Bloc<MemberEvent, MemberState> {
     on<AddMember>(_onAddMember);
     on<UpdateMember>(_onUpdateMember);
     on<DeleteMember>(_onDeleteMember);
+    on<ImportMembersCsv>(_onImportMembersCsv);
+    on<SyncOfflineMembers>(_onSyncOfflineMembers);
   }
 
   Future<void> _onLoadMembers(
@@ -63,6 +65,34 @@ class MemberBloc extends Bloc<MemberEvent, MemberState> {
       add(LoadMembers(familyId: event.familyId));
     } catch (e) {
       emit(MemberError(e.toString()));
+    }
+  }
+
+  Future<void> _onImportMembersCsv(
+    ImportMembersCsv event,
+    Emitter<MemberState> emit,
+  ) async {
+    try {
+      await _memberRepository.importMembersFromCsv(event.csvData);
+      add(const LoadMembers());
+    } catch (e) {
+      emit(MemberError('Import Error: ${e.toString()}'));
+    }
+  }
+
+  Future<void> _onSyncOfflineMembers(
+    SyncOfflineMembers event,
+    Emitter<MemberState> emit,
+  ) async {
+    try {
+      await _memberRepository.syncOfflineMembers();
+      add(const LoadMembers());
+    } catch (e) {
+      if (e.toString().contains('network_unavailable')) {
+        emit(const MemberError('Network unavailable. Connect to the internet to sync.'));
+      } else {
+        emit(MemberError('Sync Error: ${e.toString()}'));
+      }
     }
   }
 }

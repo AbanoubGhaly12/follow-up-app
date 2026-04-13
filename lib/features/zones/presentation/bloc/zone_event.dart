@@ -43,3 +43,14 @@ class DeleteZone extends ZoneEvent {
   @override
   List<Object> get props => [id];
 }
+
+class ImportZonesCsv extends ZoneEvent {
+  final List<Map<String, dynamic>> csvData;
+
+  const ImportZonesCsv(this.csvData);
+
+  @override
+  List<Object> get props => [csvData];
+}
+
+class SyncOfflineZones extends ZoneEvent {}

@@ -21,7 +21,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 11,
+      version: 15,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -100,6 +100,23 @@ class DatabaseHelper {
     if (oldVersion < 11) {
       await db.execute('ALTER TABLE followups ADD COLUMN user_uid TEXT');
     }
+    if (oldVersion < 12) {
+      await db.execute('ALTER TABLE zones ADD COLUMN is_synced INTEGER DEFAULT 1');
+    }
+    if (oldVersion < 13) {
+      await db.execute('ALTER TABLE streets ADD COLUMN tag TEXT');
+      await db.execute('ALTER TABLE streets ADD COLUMN is_synced INTEGER DEFAULT 1');
+    }
+    if (oldVersion < 14) {
+      await db.execute('ALTER TABLE families ADD COLUMN tag TEXT');
+      await db.execute('ALTER TABLE families ADD COLUMN is_synced INTEGER DEFAULT 1');
+      await db.execute('ALTER TABLE families ADD COLUMN mobile_number TEXT');
+    }
+    if (oldVersion < 15) {
+      await db.execute('ALTER TABLE members ADD COLUMN tag TEXT');
+      await db.execute('ALTER TABLE members ADD COLUMN is_synced INTEGER DEFAULT 1');
+      await db.execute('ALTER TABLE members ADD COLUMN is_family_head INTEGER DEFAULT 0');
+    }
   }
 
   Future<void> _createDB(Database db, int version) async {
@@ -112,6 +129,7 @@ class DatabaseHelper {
         description TEXT,
         zone_admins TEXT,
         admin_uid TEXT,
+        is_synced INTEGER DEFAULT 1,
         created_at TEXT,
         updated_at TEXT
       )
@@ -136,6 +154,8 @@ class DatabaseHelper {
         id TEXT PRIMARY KEY,
         zone_id TEXT,
         name TEXT,
+        tag TEXT,
+        is_synced INTEGER DEFAULT 1,
         created_at TEXT,
         updated_at TEXT,
         FOREIGN KEY (zone_id) REFERENCES zones (id) ON DELETE CASCADE
@@ -148,6 +168,9 @@ class DatabaseHelper {
         id TEXT PRIMARY KEY,
         street_id TEXT,
         family_head TEXT,
+        tag TEXT,
+        mobile_number TEXT,
+        is_synced INTEGER DEFAULT 1,
         marriage_date TEXT,
         landline TEXT,
         street TEXT,
@@ -167,6 +190,9 @@ class DatabaseHelper {
         id TEXT PRIMARY KEY,
         family_id TEXT,
         name TEXT,
+        tag TEXT,
+        is_synced INTEGER DEFAULT 1,
+        is_family_head INTEGER DEFAULT 0,
         birthdate TEXT,
         mobile_number TEXT,
         email TEXT,

@@ -43,3 +43,17 @@ class DeleteFamily extends FamilyEvent {
   @override
   List<Object> get props => [familyId, streetId];
 }
+
+class ImportFamiliesCsv extends FamilyEvent {
+  final List<Map<String, dynamic>> csvData;
+  final String streetId;
+
+  const ImportFamiliesCsv(this.csvData, this.streetId);
+
+  @override
+  List<Object> get props => [csvData, streetId];
+}
+
+class SyncOfflineFamilies extends FamilyEvent {
+  const SyncOfflineFamilies();
+}

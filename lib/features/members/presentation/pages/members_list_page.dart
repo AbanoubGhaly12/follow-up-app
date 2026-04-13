@@ -1,7 +1,11 @@
+import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:csv/csv.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../auth/presentation/cubit/auth_state.dart';
 import '../bloc/member_bloc.dart';
@@ -165,9 +169,9 @@ class _MembersListPageState extends State<MembersListPage> {
 
     Uri? uri;
     if (method == 'sms') {
-      uri = Uri.parse('sms:${member.mobileNumber}?body=$encoded');
+      uri = Uri.parse('sms:${member.mobileNumber.contains("+20") ? member.mobileNumber : "+20${member.mobileNumber}"}?body=$encoded');
     } else {
-      final phone = member.mobileNumber.replaceAll(RegExp(r'[^0-9]'), '');
+      final phone = (member.mobileNumber.contains("+20") ? member.mobileNumber : "+20${member.mobileNumber}").replaceAll(RegExp(r'[^0-9]'), '');
       uri = Uri.parse('https://wa.me/$phone?text=$encoded');
     }
 
@@ -184,8 +188,8 @@ class _MembersListPageState extends State<MembersListPage> {
         return l10n.wife;
       case MemberRole.child:
         return l10n.son; // Or logic for daughter if birthdate/gender exists, but sticking to provided l10n
-      case MemberRole.basic_member:
-        return l10n.basic_member;
+      case MemberRole.member:
+        return l10n.member;
     }
   }
 
@@ -194,7 +198,91 @@ class _MembersListPageState extends State<MembersListPage> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.members)),
+      appBar: AppBar(
+        title: Text(l10n.members),
+        actions: [
+          BlocBuilder<AuthCubit, AuthState>(
+            builder: (context, authState) {
+              final isSuperAdmin = (authState is AuthAuthenticated) && (authState.profile?.isSuperAdmin ?? false);
+              if (!isSuperAdmin || widget.isReadOnly) return const SizedBox();
+              return Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.upload_file),
+                    tooltip: 'Import CSV',
+                    onPressed: () async {
+                      final result = await FilePicker.pickFiles(
+                        type: FileType.custom,
+                        allowedExtensions: ['csv'],
+                      );
+                      if (result != null) {
+                        try {
+                          String csvString;
+                          if (result.files.single.bytes != null) {
+                            csvString = utf8.decode(result.files.single.bytes!);
+                          } else {
+                            final file = File(result.files.single.path!);
+                            csvString = await file.readAsString();
+                          }
+                          final eol = csvString.contains('\r\n') ? '\r\n' : '\n';
+                          final fields = CsvToListConverter(eol: eol).convert(csvString);
+                          
+                          if (fields.length > 1) { // headers + at least 1 row
+                            final headers = fields.first.map((e) => e.toString().toLowerCase().trim()).toList();
+                            final requiredHeaders = ['name', 'mobile_number', 'family_tag'];
+                            final hasAll = requiredHeaders.every((h) => headers.contains(h));
+                            
+                            if (hasAll) {
+                              final List<Map<String, dynamic>> csvData = [];
+                              for (var i = 1; i < fields.length; i++) {
+                                final row = fields[i];
+                                Map<String, dynamic> rowData = {};
+                                for (String h in headers) {
+                                  final index = headers.indexOf(h);
+                                  rowData[h] = index < row.length ? row[index] : '';
+                                }
+                                csvData.add(rowData);
+                              }
+                              if (context.mounted) {
+                                context.read<MemberBloc>().add(ImportMembersCsv(csvData));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Importing members...'))
+                                );
+                              }
+                            } else {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Invalid CSV. Missing required columns (name, mobile_number, family_tag).'))
+                                );
+                              }
+                            }
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Error parsing CSV: $e'))
+                            );
+                          }
+                        }
+                      }
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.cloud_upload),
+                    tooltip: 'Upload offline to Cloud',
+                    onPressed: () {
+                      context.read<MemberBloc>().add(const SyncOfflineMembers());
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Syncing offline members...'))
+                      );
+                    },
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
       body: BlocBuilder<MemberBloc, MemberState>(
         builder: (context, state) {
           if (state is MemberLoading) {
@@ -239,10 +327,13 @@ class _MembersListPageState extends State<MembersListPage> {
                             borderRadius: BorderRadius.circular(12),
                             border: Border(
                               left: BorderSide(
-                                color: Colors.purple.shade700,
+                                color: member.isDead
+                                    ? Colors.blueGrey.shade700
+                                    : Colors.purple.shade700,
                                 width: 6,
                               ),
                             ),
+                            color: member.isDead ? Colors.grey.shade200 : null,
                           ),
                           child: InkWell(
                             onTap: () {
@@ -251,16 +342,25 @@ class _MembersListPageState extends State<MembersListPage> {
                                 context,
                                 title: member.name,
                                 items: [
+                                  DetailItem(
+                                    l10n.tag,
+                                    member.tag,
+                                  ),
                                   DetailItem(l10n.name, member.name),
+                                  DetailItem(
+                                    l10n.isFamilyHead,
+                                    member.isFamilyHead ? l10n.yes : l10n.no,
+                                  ),
                                   DetailItem(
                                     l10n.mobileNumber,
                                     member.mobileNumber,
                                   ),
                                   DetailItem(l10n.email, member.email),
-                                  DetailItem(
-                                    l10n.birthdate(df.format(member.birthdate)),
-                                    '',
-                                  ),
+                                  if (member.birthdate != null)
+                                    DetailItem(
+                                      l10n.birthdate(df.format(member.birthdate!)),
+                                      '',
+                                    ),
                                   DetailItem(
                                     l10n.nationalId,
                                     member.nationalId,
@@ -298,10 +398,12 @@ class _MembersListPageState extends State<MembersListPage> {
                               );
                             },
                             borderRadius: BorderRadius.circular(12),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                            child: Opacity(
+                              opacity: member.isDead ? 0.7 : 1.0,
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
                                     mainAxisAlignment:
@@ -403,9 +505,8 @@ class _MembersListPageState extends State<MembersListPage> {
                                   const Divider(),
                                   const SizedBox(height: 8),
                                   Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceAround,
-                                    children: [
+                                  children: [
+                                    if (!member.isDead) ...[
                                       IconButton(
                                         icon: const Icon(
                                           Icons.phone_outlined,
@@ -413,7 +514,7 @@ class _MembersListPageState extends State<MembersListPage> {
                                         ),
                                         onPressed:
                                             () => _callMember(
-                                              member.mobileNumber,
+                                              member.mobileNumber.contains("+20") ? member.mobileNumber : "+20${member.mobileNumber}",
                                             ),
                                       ),
                                       IconButton(
@@ -427,6 +528,8 @@ class _MembersListPageState extends State<MembersListPage> {
                                               member,
                                             ),
                                       ),
+                                    ],
+                                    if (!member.isDead)
                                       IconButton(
                                         icon: const Icon(
                                           Icons.assignment_add,
@@ -438,29 +541,30 @@ class _MembersListPageState extends State<MembersListPage> {
                                           );
                                         },
                                       ),
-                                      BlocBuilder<AuthCubit, AuthState>(
-                                        builder: (context, authState) {
-                                          final isSuperAdmin = (authState is AuthAuthenticated) && (authState.profile?.isSuperAdmin ?? false);
-                                          if (!isSuperAdmin || widget.isReadOnly) return const SizedBox();
-                                          return IconButton(
-                                            icon: const Icon(
-                                              Icons.edit_outlined,
-                                              color: Colors.blue,
-                                            ),
-                                            onPressed: () {
-                                              context.push(
-                                                '/families/${member.familyId}/members/edit',
-                                                extra: member,
-                                              );
-                                            },
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                  ),
+                                    BlocBuilder<AuthCubit, AuthState>(
+                                      builder: (context, authState) {
+                                        final isSuperAdmin = (authState is AuthAuthenticated) && (authState.profile?.isSuperAdmin ?? false);
+                                        if (!isSuperAdmin || widget.isReadOnly) return const SizedBox();
+                                        return IconButton(
+                                          icon: const Icon(
+                                            Icons.edit_outlined,
+                                            color: Colors.blue,
+                                          ),
+                                          onPressed: () {
+                                            context.push(
+                                              '/families/${member.familyId}/members/edit',
+                                              extra: member,
+                                            );
+                                          },
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                ),
                                 ],
                               ),
                             ),
+                          ),
                           ),
                         ),
                       );

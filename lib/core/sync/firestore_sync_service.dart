@@ -58,6 +58,18 @@ class FirestoreSyncService {
     }
   }
 
+  Future<bool> doesZoneTagExist(String tag) async {
+    try {
+      final snapshot = await _firestore
+          .collection('zones')
+          .where('tag', isEqualTo: tag)
+          .get();
+      return snapshot.docs.isNotEmpty;
+    } catch (e) {
+      return false;
+    }
+  }
+
   Future<List<Map<String, dynamic>>> fetchZones({bool isAdmin =false , bool fetchOther = false}) async {
     if (currentUserId == null) return [];
     try {
@@ -135,7 +147,37 @@ class FirestoreSyncService {
     }
   }
 
+  Future<bool> doesStreetTagExist(String tag, String zoneId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('zones')
+          .doc(zoneId)
+          .collection('streets')
+          .where('tag', isEqualTo: tag)
+          .get();
+      return snapshot.docs.isNotEmpty;
+    } catch (e) {
+      return false;
+    }
+  }
+
   // ─── Family Operations ───
+
+  Future<bool> doesFamilyTagExist(String tag, String zoneId, String streetId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('zones')
+          .doc(zoneId)
+          .collection('streets')
+          .doc(streetId)
+          .collection('families')
+          .where('tag', isEqualTo: tag)
+          .get();
+      return snapshot.docs.isNotEmpty;
+    } catch (e) {
+      return false;
+    }
+  }
 
   Future<void> pushFamily(Map<String, dynamic> data, String zoneId) async {
     if (currentUserId == null) return;
@@ -192,6 +234,24 @@ class FirestoreSyncService {
   }
 
   // ─── Member Operations ───
+
+  Future<bool> doesMemberTagExist(String tag, String zoneId, String streetId, String familyId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('zones')
+          .doc(zoneId)
+          .collection('streets')
+          .doc(streetId)
+          .collection('families')
+          .doc(familyId)
+          .collection('members')
+          .where('tag', isEqualTo: tag)
+          .get();
+      return snapshot.docs.isNotEmpty;
+    } catch (e) {
+      return false;
+    }
+  }
 
   Future<void> pushMember(
     Map<String, dynamic> data,

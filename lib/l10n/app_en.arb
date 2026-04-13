@@ -143,12 +143,17 @@
   "school": "School Stage",
   "university": "University",
   "graduate": "Graduate",
+  "preschool": "Preschool",
+  "kg": "Kindergarten",
+  "primary": "Primary",
+  "preparatory": "Preparatory",
+  "secondary": "Secondary",
 
   "husband": "Husband",
   "wife": "Wife",
   "son": "Son",
   "daughter": "Daughter",
-  "basic_member": "Basic Member",
+  "member": "Member",
 
   "tag": "Tag",
   "admins": "Admins",
@@ -161,8 +166,12 @@
   "pleaseSelectBirthdate": "Please select birthdate",
   "couldNotLaunchApp": "Could not launch messaging app.",
   "noBirthdayTemplates": "No Birthday templates available! Please create one in Message Templates first.",
+  "noCondolenceTemplates": "No Condolence templates available! Please create one in Message Templates first.",
   "noBirthdaysOnDate": "No birthdays on this date!",
   "noTemplatesAvailable": "No templates available. Create one in Message Templates first.",
+  "birthdayFollowupDone": "Birthday Follow-up Done",
+  "condolenceFollowupDone": "Condolence Follow-up Done",
+  "markAsFollowedUp": "Mark as Followed Up",
   "turnsAgeOn": "Turns {age} on {date}",
   "@turnsAgeOn": {
     "placeholders": {
@@ -242,5 +251,18 @@
   "errorsCount": "Errors",
   "importSequenceWarning": "⚠️ Import sequence is important!",
   "category": "Category",
-  "otherZones": "Other Zones"
+  "otherZones": "Other Zones",
+  "isFamilyHead": "Is Family Head",
+  "yes": "Yes",
+  "no": "No",
+  "deadMembers": "Dead Members",
+  "noDeadMembersInPeriod": "No dead members found in this period.",
+  "diedOn": "Died on {date}",
+  "@diedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  }
 }

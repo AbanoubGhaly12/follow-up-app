@@ -1,7 +1,11 @@
+import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:csv/csv.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../auth/presentation/cubit/auth_state.dart';
 import '../bloc/family_bloc.dart';
@@ -31,7 +35,91 @@ class _FamiliesListPageState extends State<FamiliesListPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.families)),
+      appBar: AppBar(
+        title: Text(l10n.families),
+        actions: [
+          BlocBuilder<AuthCubit, AuthState>(
+            builder: (context, authState) {
+              final isSuperAdmin = (authState is AuthAuthenticated) && (authState.profile?.isSuperAdmin ?? false);
+              if (!isSuperAdmin || widget.isReadOnly || widget.streetId == null) return const SizedBox();
+              return Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.upload_file),
+                    tooltip: 'Import CSV',
+                    onPressed: () async {
+                      final result = await FilePicker.pickFiles(
+                        type: FileType.custom,
+                        allowedExtensions: ['csv'],
+                      );
+                      if (result != null) {
+                        try {
+                          String csvString;
+                          if (result.files.single.bytes != null) {
+                            csvString = utf8.decode(result.files.single.bytes!);
+                          } else {
+                            final file = File(result.files.single.path!);
+                            csvString = await file.readAsString();
+                          }
+                          final eol = csvString.contains('\r\n') ? '\r\n' : '\n';
+                          final fields = CsvToListConverter(eol: eol).convert(csvString);
+                          
+                          if (fields.length > 1) { // headers + at least 1 row
+                            final headers = fields.first.map((e) => e.toString().toLowerCase().trim()).toList();
+                            final requiredHeaders = ['family_head'];
+                            final hasAll = requiredHeaders.every((h) => headers.contains(h));
+                            
+                            if (hasAll) {
+                              final List<Map<String, dynamic>> csvData = [];
+                              for (var i = 1; i < fields.length; i++) {
+                                final row = fields[i];
+                                Map<String, dynamic> rowData = {};
+                                for (String h in headers) {
+                                  final index = headers.indexOf(h);
+                                  rowData[h] = index < row.length ? row[index] : '';
+                                }
+                                csvData.add(rowData);
+                              }
+                              if (context.mounted) {
+                                context.read<FamilyBloc>().add(ImportFamiliesCsv(csvData, widget.streetId!));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Importing families...'))
+                                );
+                              }
+                            } else {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Invalid CSV. Missing "family_head" column.'))
+                                );
+                              }
+                            }
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Error parsing CSV: $e'))
+                            );
+                          }
+                        }
+                      }
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.cloud_upload),
+                    tooltip: 'Upload offline to Cloud',
+                    onPressed: () {
+                      context.read<FamilyBloc>().add(const SyncOfflineFamilies());
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Syncing offline families...'))
+                      );
+                    },
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
       body: BlocBuilder<FamilyBloc, FamilyState>(
         builder: (context, state) {
           if (state is FamilyLoading) {
@@ -229,6 +317,14 @@ class _FamiliesListPageState extends State<FamiliesListPage> {
                                               DetailItem(
                                                 l10n.familyHead,
                                                 family.familyHead,
+                                              ),
+                                              DetailItem(
+                                                l10n.tag,
+                                                family.tag,
+                                              ),
+                                              DetailItem(
+                                                l10n.mobileNumber,
+                                                family.mobileNumber,
                                               ),
                                               DetailItem(
                                                 l10n.landline,

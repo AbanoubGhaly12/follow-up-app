@@ -14,6 +14,8 @@ class FamilyBloc extends Bloc<FamilyEvent, FamilyState> {
     on<AddFamily>(_onAddFamily);
     on<UpdateFamily>(_onUpdateFamily);
     on<DeleteFamily>(_onDeleteFamily);
+    on<ImportFamiliesCsv>(_onImportFamiliesCsv);
+    on<SyncOfflineFamilies>(_onSyncOfflineFamilies);
   }
 
   Future<void> _onLoadFamilies(
@@ -62,6 +64,34 @@ class FamilyBloc extends Bloc<FamilyEvent, FamilyState> {
       add(LoadFamilies(streetId: event.streetId));
     } catch (e) {
       emit(FamilyError(e.toString()));
+    }
+  }
+
+  Future<void> _onImportFamiliesCsv(
+    ImportFamiliesCsv event,
+    Emitter<FamilyState> emit,
+  ) async {
+    try {
+      await _familyRepository.importFamiliesFromCsv(event.csvData, event.streetId);
+      add(LoadFamilies(streetId: event.streetId));
+    } catch (e) {
+      emit(FamilyError('Import Error: ${e.toString()}'));
+    }
+  }
+
+  Future<void> _onSyncOfflineFamilies(
+    SyncOfflineFamilies event,
+    Emitter<FamilyState> emit,
+  ) async {
+    try {
+      await _familyRepository.syncOfflineFamilies();
+      add(const LoadFamilies());
+    } catch (e) {
+      if (e.toString().contains('network_unavailable')) {
+        emit(const FamilyError('Network unavailable. Connect to the internet to sync.'));
+      } else {
+        emit(FamilyError('Sync Error: ${e.toString()}'));
+      }
     }
   }
 }

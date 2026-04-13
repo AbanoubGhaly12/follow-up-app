@@ -11,6 +11,8 @@ class StreetBloc extends Bloc<StreetEvent, StreetState> {
     on<AddStreet>(_onAddStreet);
     on<UpdateStreet>(_onUpdateStreet);
     on<DeleteStreet>(_onDeleteStreet);
+    on<ImportStreetsCsv>(_onImportStreetsCsv);
+    on<SyncOfflineStreets>(_onSyncOfflineStreets);
   }
 
   Future<void> _onLoadStreets(
@@ -59,6 +61,37 @@ class StreetBloc extends Bloc<StreetEvent, StreetState> {
       add(LoadStreets(zoneId: event.zoneId));
     } catch (e) {
       emit(StreetError(e.toString()));
+    }
+  }
+
+  Future<void> _onImportStreetsCsv(
+    ImportStreetsCsv event,
+    Emitter<StreetState> emit,
+  ) async {
+    try {
+      await repository.importStreetsFromCsv(event.csvData, event.zoneId);
+      add(LoadStreets(zoneId: event.zoneId));
+    } catch (e) {
+      emit(StreetError('Import Error: ${e.toString()}'));
+    }
+  }
+
+  Future<void> _onSyncOfflineStreets(
+    SyncOfflineStreets event,
+    Emitter<StreetState> emit,
+  ) async {
+    // Currently relying on the last known zoneId since Sync doesn't target a specific zone
+    // But LoadStreets(zoneId: null) fetches all streets if needed.
+    // Ideally we just reload the current view. 
+    try {
+      await repository.syncOfflineStreets();
+      add(const LoadStreets()); // Reload all or rely on current state
+    } catch (e) {
+      if (e.toString().contains('network_unavailable')) {
+        emit(const StreetError('Network unavailable. Connect to the internet to sync.'));
+      } else {
+        emit(StreetError('Sync Error: ${e.toString()}'));
+      }
     }
   }
 }
